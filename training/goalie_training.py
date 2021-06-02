@@ -8,6 +8,7 @@ from rlbottraining.training_exercise import Playlist
 from rlbot.utils.game_state_util import GameState, BallState, CarState, Physics, Vector3, Rotator
 from rlbottraining.common_graders.compound_grader import CompoundGrader
 from base_graders import PassOnBallGoingAwayFromGoal, PassOnGoalForAllyTeam, PassOnTimeout
+from utility.math import Vec3
 
 
 class GoalieGrader(CompoundGrader):
@@ -19,32 +20,19 @@ class GoalieGrader(CompoundGrader):
         ])
 
 
-def norm(vec):
-    norm = sqrt(pow(vec.x, 2)+pow(vec.y, 2) + pow(vec.z, 2))
-    return Vector3(vec.x / norm, vec.y/norm, vec.z/norm)
-
-
-def minus(vec1, vec2):
-    return Vector3(vec1.x - vec2.x, vec1.y - vec2.y, vec1.z - vec2.z)
-
-
-def times(vec, scalar):
-    return Vector3(vec.x * scalar, vec.y * scalar, vec.z * scalar)
-
-
 @dataclass
 class BallRollingToGoalie(TrainingExercise):
     grader: Grader = field(default_factory=GoalieGrader)
 
     def make_game_state(self, rng: SeededRandomNumberGenerator) -> GameState:
-        target = Vector3(rng.uniform(-800, 800), -5800, 0)
-        ball_location = Vector3(rng.uniform(-800, 800), 0, 100)
-        ball_velocity = times(
-            norm(minus(target, ball_location)), rng.uniform(1500, 1800))
+        target = Vec3(rng.uniform(-800, 800), -5800, 0)
+        ball_location = Vec3(rng.uniform(-800, 800), 0, 100)
+        ball_velocity = (target - ball_location).normalize() * \
+            rng.uniform(1500, 1800)
         return GameState(
             ball=BallState(physics=Physics(
-                location=ball_location,
-                velocity=ball_velocity,
+                location=ball_location.toRLVec(),
+                velocity=ball_velocity.toRLVec(),
                 angular_velocity=Vector3(0, 0, 0)
             )),
             cars={
