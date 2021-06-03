@@ -1,5 +1,8 @@
+import numpy as np
 import onnx
 import onnxruntime
+
+from rlbot.utils.structures.game_data_struct import GameTickPacket
 
 
 class ONNXModel():
@@ -8,7 +11,7 @@ class ONNXModel():
         self.model = onnx.load(model_path)
         self.session = onnxruntime.InferenceSession(model_path, None)
         self.input_name = self.session.get_inputs()[0].name
-        self.output_name = self.session.get_outputs()[0].name
+        self.output_name = self.session.get_outputs()[2].name
 
     def run(self, data):
         return self.session.run([self.output_name], {self.input_name: data})
@@ -25,4 +28,4 @@ class ONNXModel():
         return self.session.get_inputs()[0].shape
 
     def get_output_shape(self):
-        return self.session.get_outputs()[0].shape
+        return self.session.get_outputs()[2].shape

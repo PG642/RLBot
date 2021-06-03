@@ -1,3 +1,6 @@
+import time
+from pathlib import Path
+
 from rlbot.agents.base_agent import BaseAgent, SimpleControllerState, BOT_CONFIG_AGENT_HEADER
 from rlbot.messages.flat.QuickChatSelection import QuickChatSelection
 from rlbot.parsing.custom_config import ConfigObject
@@ -8,8 +11,6 @@ from util.boost_pad_tracker import BoostPadTracker
 from util.drive import steer_toward_target
 from util.sequence import Sequence, ControlStep
 from util.vec import Vec3
-
-from src.models.onnx_model import ONNXModel
 
 class MyBot(BaseAgent):
 
@@ -89,14 +90,3 @@ class MyBot(BaseAgent):
 
         # Return the controls associated with the beginning of the sequence so we can start right away.
         return self.active_sequence.tick(packet)
-
-    def load_config(self, config_object_header):
-        model_path = config_object_header['model_path'].value
-        if model_path is not None:
-            self.model = ONNXModel(model_path)
-
-    @staticmethod
-    def create_agent_configurations(config: ConfigObject):
-        params = config.get_header(BOT_CONFIG_AGENT_HEADER)
-        params.add_value('model_path', str, default=None,
-                         description='Port to use for websocket communication')
