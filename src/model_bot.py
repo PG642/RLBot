@@ -7,7 +7,7 @@ from rlbot.parsing.custom_config import ConfigObject
 from rlbot.utils.structures.game_data_struct import GameTickPacket
 
 from util.drive import steer_toward_target
-from util.vec import Vec3
+from util.vec import Vec3, Location, Velocity, Quaternion, AngularVelocity
 
 from src.models.onnx_model import ONNXModel
 
@@ -24,41 +24,27 @@ class MyBot(BaseAgent):
         see the motion of the ball, etc. and return controls to drive your car.
         """
 
+        car_physics = packet.game_cars[self.index].physics
+        ball_physics = packet.game_ball.physics
+
+        car_location = Location(car_physics.location).convert(to_unity_units=True)
+        car_velocity = Velocity(car_physics.velocity).convert(to_unity_units=True)
+        car_rotation = Quaternion(car_physics.rotation).convert(to_unity_units=True)
+        car_angular_velocity = AngularVelocity(car_physics.angular_velocity).convert(to_unity_units=True)
+        ball_location = Location(ball_physics.location).convert(to_unity_units=True)
+        ball_velocity = Velocity(ball_physics.velocity).convert(to_unity_units=True)
+
         # get input shape of model and set batch size to one
         input_shape = self.model.get_input_shape()
         input_shape[0] = 1
 
         data = np.zeros(shape=input_shape, dtype=np.float32)
-
-        car_physics = packet.game_cars[self.index].physics
-        ball_physics = packet.game_ball.physics
-
-        car_location = [car_physics.location.y / 100, car_physics.location.x / 100, car_physics.location.z / 100]
-        car_velocity = [car_physics.velocity.y / 100, car_physics.velocity.x / 100, car_physics.velocity.z / 100]
-        car_angular_velocity = [car_physics.angular_velocity.y, car_physics.angular_velocity.z,
-                                car_physics.angular_velocity.x]
-        ball_location = [ball_physics.location.y / 100, ball_physics.location.x / 100, ball_physics.location.z / 100]
-        ball_velocity = [ball_physics.velocity.y / 100, ball_physics.velocity.x / 100, ball_physics.velocity.z / 100]
-
-        cy = cos(car_physics.rotation.yaw * 0.5)
-        sy = sin(car_physics.rotation.yaw * 0.5)
-        cp = cos(car_physics.rotation.pitch * 0.5)
-        sp = sin(car_physics.rotation.pitch * 0.5)
-        cr = cos(car_physics.rotation.roll * 0.5)
-        sr = sin(car_physics.rotation.roll * 0.5)
-
-        x = sr * cp * cy - cr * sp * sy
-        y = cr * sp * cy + sr * cp * sy
-        z = cr * cp * sy - sr * sp * cy
-        w = cr * cp * cy + sr * sp * sy
-        car_rotation = [y, z, x, w]
-
-        data[0, 0:3] = car_location
-        data[0, 3:7] = car_rotation
-        data[0, 7:10] = car_velocity
-        data[0, 10:13] = car_angular_velocity
-        data[0, 13:16] = ball_location
-        data[0, 16:19] = ball_velocity
+        data[0, 0:3] = list(car_location)
+        data[0, 3:7] = list(car_rotation)
+        data[0, 7:10] = list(car_velocity)
+        data[0, 10:13] = list(car_angular_velocity)
+        data[0, 13:16] = list(ball_location)
+        data[0, 16:19] = list(ball_velocity)
 
         output = self.model.run(data)
         output = output[0].tolist()[0]

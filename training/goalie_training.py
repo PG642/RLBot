@@ -1,4 +1,4 @@
-from math import pi, pow, sqrt
+from math import pi
 from dataclasses import dataclass, field
 
 from rlbottraining.training_exercise import TrainingExercise
@@ -21,19 +21,6 @@ class GoalieGrader(CompoundGrader):
         ])
 
 
-def norm(vec):
-    norm = sqrt(pow(vec.x, 2)+pow(vec.y, 2) + pow(vec.z, 2))
-    return Vector3(vec.x / norm, vec.y/norm, vec.z/norm)
-
-
-def minus(vec1, vec2):
-    return Vector3(vec1.x - vec2.x, vec1.y - vec2.y, vec1.z - vec2.z)
-
-
-def times(vec, scalar):
-    return Vector3(vec.x * scalar, vec.y * scalar, vec.z * scalar)
-
-
 @dataclass
 class BallRollingToGoalie(TrainingExercise):
     grader: Grader = field(default_factory=GoalieGrader)
@@ -44,15 +31,15 @@ class BallRollingToGoalie(TrainingExercise):
         ball_velocity = (target - ball_location).normalized() * rng.uniform(3000, 3000)
         return GameState(
             ball=BallState(physics=Physics(
-                location=Vector3(ball_location.x, ball_location.y, ball_location.z),
-                velocity=Vector3(ball_velocity.x, ball_velocity.y, ball_velocity.z),
+                location=ball_location.to_game_state_vector(),
+                velocity=ball_velocity.to_game_state_vector(),
                 angular_velocity=Vector3(0, 0, 0)
             )),
             cars={
                 0: CarState(
                     physics=Physics(
                         location=Vector3(0, -5800, 0),
-                        rotation=Rotator(0, pi/2, 0),
+                        rotation=Rotator(0, pi / 2, 0),
                         velocity=Vector3(0, 0, 0),
                         angular_velocity=Vector3(0, 0, 0)
                     )
