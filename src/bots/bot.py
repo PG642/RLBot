@@ -1,13 +1,16 @@
-from rlbot.agents.base_agent import BaseAgent, SimpleControllerState
+import time
+from pathlib import Path
+
+from rlbot.agents.base_agent import BaseAgent, SimpleControllerState, BOT_CONFIG_AGENT_HEADER
 from rlbot.messages.flat.QuickChatSelection import QuickChatSelection
+from rlbot.parsing.custom_config import ConfigObject
 from rlbot.utils.structures.game_data_struct import GameTickPacket
 
-from util.ball_prediction_analysis import find_slice_at_time
-from util.boost_pad_tracker import BoostPadTracker
-from util.drive import steer_toward_target
-from util.sequence import Sequence, ControlStep
-from util.vec import Vec3
-
+from src.utils.ball_prediction_analysis import find_slice_at_time
+from src.utils.boost_pad_tracker import BoostPadTracker
+from src.utils.drive import steer_toward_target
+from src.utils.sequence import Sequence, ControlStep
+from src.utils.vec import Vec3
 
 class MyBot(BaseAgent):
 
