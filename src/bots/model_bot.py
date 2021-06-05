@@ -6,8 +6,8 @@ from rlbot.messages.flat.QuickChatSelection import QuickChatSelection
 from rlbot.parsing.custom_config import ConfigObject
 from rlbot.utils.structures.game_data_struct import GameTickPacket
 
-from util.drive import steer_toward_target
-from util.vec import Vec3, Location, Velocity, Quaternion, AngularVelocity
+from src.utils.drive import steer_toward_target
+from src.utils.vec import Vec3, Location, Velocity, Quaternion, AngularVelocity
 
 from src.models.onnx_model import ONNXModel
 

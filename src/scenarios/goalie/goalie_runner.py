@@ -5,7 +5,7 @@ import rlbottraining.exercise_runner as er
 from rlbot.matchconfig.conversions import read_match_config_from_file
 from rlbot.matchconfig.match_config import Team, PlayerConfig
 from rlbottraining.training_exercise import Playlist
-import goalie_training as gt
+from goalie_training import BallRollingToGoalie
 
 
 
@@ -13,9 +13,6 @@ def make_match_config():
     match_config = read_match_config_from_file(Path('goalie_match.cfg'))
     playerConfig = PlayerConfig.bot_config(
         Path(__file__).absolute().parent / 'goalie_bot.cfg', Team.BLUE)
-    # This is needed to only reset the gamestate instead of resetting the game
-    # Else the spawn_id will be random and each new spawn ID provokes a new gamestate
-    # playerConfig.spawn_id = 1
     match_config.player_configs = [
         playerConfig
     ]
@@ -25,7 +22,7 @@ match_config = make_match_config()
 
 def make_default_playlist() -> Playlist:
     exercises = [
-        gt.BallRollingToGoalie('BallRollingToGoalie')
+        BallRollingToGoalie('BallRollingToGoalie')
     ]
     for exercise in exercises:
         exercise.match_config = match_config

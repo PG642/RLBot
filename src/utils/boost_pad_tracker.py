@@ -3,7 +3,7 @@ from typing import List
 
 from rlbot.utils.structures.game_data_struct import GameTickPacket, FieldInfoPacket
 
-from util.vec import Vec3
+from .vec import Vec3
 
 
 @dataclass

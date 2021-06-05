@@ -1,7 +1,7 @@
 import math
 from typing import Union
 
-from rlbot.utils.game_state_util import Vector3
+from rlbot.utils.game_state_util import Vector3, Rotator
 
 from math import cos, sin
 
@@ -117,7 +117,7 @@ class Vec3:
 class Vec4:
     """
     This class should provide you with all the basic vector operations that you need, but feel free to extend its
-    functionality when needed.
+    functionaleity when neded.
     The vectors found in the GameTickPacket will be flatbuffer vectors. Cast them to Vec3 like this:
     `car_location = Vec4(car.physics.location)`.
 

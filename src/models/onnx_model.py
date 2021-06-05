@@ -1,8 +1,5 @@
-import numpy as np
 import onnx
 import onnxruntime
-
-from rlbot.utils.structures.game_data_struct import GameTickPacket
 
 
 class ONNXModel():
