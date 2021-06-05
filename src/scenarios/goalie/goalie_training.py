@@ -7,8 +7,8 @@ from rlbottraining.rng import SeededRandomNumberGenerator
 from rlbottraining.training_exercise import Playlist
 from rlbot.utils.game_state_util import GameState, BallState, CarState, Physics, Vector3, Rotator
 from rlbottraining.common_graders.compound_grader import CompoundGrader
-from src.graders.base_graders import PassOnBallGoingAwayFromGoal, PassOnGoalForAllyTeam, PassOnTimeout
 
+from src.graders.pass_graders import PassOnBallGoingAwayFromGoal, PassOnGoalForAllyTeam, PassOnTimeout
 from src.utils.vec import Vec3
 
 

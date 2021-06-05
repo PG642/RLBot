@@ -8,7 +8,6 @@ from rlbottraining.training_exercise import Playlist
 from goalie_training import BallRollingToGoalie
 
 
-
 def make_match_config():
     match_config = read_match_config_from_file(Path('goalie_match.cfg'))
     playerConfig = PlayerConfig.bot_config(
@@ -18,7 +17,9 @@ def make_match_config():
     ]
     return match_config
 
+
 match_config = make_match_config()
+
 
 def make_default_playlist() -> Playlist:
     exercises = [
