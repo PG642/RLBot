@@ -226,24 +226,26 @@ class Vec4:
 class Location(Vec3):
     def convert(self, to_unity_units: bool) -> 'Location':
         tmp = self.x
-        self.x = self.y
+        self.x = self.z
+        self.z = self.y
         self.y = tmp
         if to_unity_units:
-            self / 100
+            self /= 100
         else:
-            self * 100
+            self *= 100
         return self
 
 
 class Velocity(Vec3):
     def convert(self, to_unity_units: bool) -> 'Velocity':
         tmp = self.x
-        self.x = self.y
+        self.x = self.z
+        self.z = self.y
         self.y = tmp
         if to_unity_units:
-            self / 100
+            self /= 100
         else:
-            self * 100
+            self *= 100
         return self
 
 
