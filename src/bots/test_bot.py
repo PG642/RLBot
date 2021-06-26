@@ -8,8 +8,8 @@ from rlbot.parsing.custom_config import ConfigObject
 from rlbot.utils.structures.game_data_struct import GameTickPacket
 
 from src.utils.sequence import Sequence, ControlStep
-from src.utils.ScenarioTestObject import ScenarioTestObject
-
+from src.utils.scenario_test_object import ScenarioTestObject
+from src.utils.logger import Logger
 
 class TestBot(BaseAgent):
 
@@ -17,6 +17,11 @@ class TestBot(BaseAgent):
         super().__init__(name, team, index)
         self.active_sequence: Sequence = None
         self.scenario = None
+        self.logger = None
+        print('Init')
+
+    def __del__(self):
+        self.logger.dump()
 
     def get_output(self, packet: GameTickPacket) -> SimpleControllerState:
         """
@@ -24,14 +29,19 @@ class TestBot(BaseAgent):
         see the motion of the ball, etc. and return controls to drive your car.
         """
 
+        self.logger.log(packet)
+
+        if self.active_sequence is None:
+            return self.start_action_sequence(packet)
+
         # This is good to keep at the beginning of get_output. It will allow you to continue
         # any sequences that you may have started during a previous call to get_output.
-        if self.active_sequence is not None and not self.active_sequence.done:
+        if not self.active_sequence.done:
             controls = self.active_sequence.tick(packet)
             if controls is not None:
                 return controls
 
-        return self.start_action_sequence(packet)
+        self.logger.dump()
 
     def start_action_sequence(self, packet):
         self.send_quick_chat(team_only=False, quick_chat=QuickChatSelection.Information_IGotIt)
@@ -57,6 +67,8 @@ class TestBot(BaseAgent):
         scenario = config_object_header['scenarios'].value
         with open(scenario) as file:
             self.scenario = json.load(file, object_hook=ScenarioTestObject)
+
+        self.logger = Logger(self.scenario.name)
 
     @staticmethod
     def create_agent_configurations(config: ConfigObject):

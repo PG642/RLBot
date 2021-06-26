@@ -264,6 +264,17 @@ class AngularVelocity(Vec3):
         return self
 
 
+class EulerAngles(Vec3):
+    def __init__(self, pitch: float = 0, yaw: float = 0, roll: float = 0):
+        self.x = pitch / 180 * math.pi
+        self.y = yaw / 180 * math.pi
+        self.z = roll / 180 * math.pi
+
+    def to_game_state_vector(self):
+        return Rotator(self.x, self.y, self.z)
+
+
+
 class Quaternion(Vec4):
     def __init__(self, x: Union[float, 'Quaternion', 'Rotator'] = 0, y: float = 0, z: float = 0, w: float = 0):
         if hasattr(x, 'pitch'):
