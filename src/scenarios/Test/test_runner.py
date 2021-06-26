@@ -34,9 +34,7 @@ def make_default_playlist() -> Playlist:
         scenario = json.load(file, object_hook=ScenarioTestObject)
 
     exercises = [
-        TestExercise(name='TestExercise1', scenario=scenario),
-        TestExercise(name='TestExercise2', scenario=scenario),
-        TestExercise(name='TestExercise3', scenario=scenario)
+        TestExercise(name='TestExercise1', scenario=scenario)
     ]
     for exercise in exercises:
         exercise.match_config = match_config

@@ -5,11 +5,14 @@ from pathlib import Path
 from rlbot.agents.base_agent import BaseAgent, SimpleControllerState, BOT_CONFIG_AGENT_HEADER
 from rlbot.messages.flat.QuickChatSelection import QuickChatSelection
 from rlbot.parsing.custom_config import ConfigObject
+from rlbot.utils.game_state_util import GameState, BallState, CarState, Physics
 from rlbot.utils.structures.game_data_struct import GameTickPacket
 
 from src.utils.sequence import Sequence, ControlStep
 from src.utils.scenario_test_object import ScenarioTestObject
 from src.utils.logger import Logger
+
+from src.utils.vec import Location, Velocity, AngularVelocity, EulerAngles, Quaternion
 
 class TestBot(BaseAgent):
 
@@ -20,31 +23,32 @@ class TestBot(BaseAgent):
         self.logger = None
         print('Init')
 
-    def __del__(self):
-        self.logger.dump()
-
     def get_output(self, packet: GameTickPacket) -> SimpleControllerState:
         """
         This function will be called by the framework many times per second. This is where you can
         see the motion of the ball, etc. and return controls to drive your car.
         """
 
-        self.logger.log(packet)
-
         if self.active_sequence is None:
-            return self.start_action_sequence(packet)
+            self.setup()
 
-        # This is good to keep at the beginning of get_output. It will allow you to continue
-        # any sequences that you may have started during a previous call to get_output.
-        if not self.active_sequence.done:
+        if self.active_sequence is not None and not self.active_sequence.done:
+            self.logger.log(packet)
             controls = self.active_sequence.tick(packet)
             if controls is not None:
                 return controls
 
-        self.logger.dump()
+        if not self.logger.was_dumped:
+            self.logger.dump()
+        return SimpleControllerState()
 
-    def start_action_sequence(self, packet):
+    def setup(self):
+        self.setup_game_state()
+        self.setup_action_sequence()
+
+    def setup_action_sequence(self):
         self.send_quick_chat(team_only=False, quick_chat=QuickChatSelection.Information_IGotIt)
+        self.logger = Logger(self.scenario.name)
 
         control_step_list = []
         for action in self.scenario.actions:
@@ -53,7 +57,42 @@ class TestBot(BaseAgent):
 
         self.active_sequence = Sequence(control_step_list)
 
-        return self.active_sequence.tick(packet)
+    def setup_game_state(self):
+        start_values = self.scenario.startValues
+        for values in start_values:
+            if values.gameObject == 'car':
+                car_position = Location(values.position.x, values.position.y, values.position.z)
+                car_velocity = Velocity(values.velocity.x, values.velocity.y, values.velocity.z)
+                car_angular_velocity = AngularVelocity(values.angularVelocity.x, values.angularVelocity.y,
+                                                       values.angularVelocity.z)
+                car_rotation = EulerAngles(values.rotation.x, values.rotation.y, -values.rotation.z)
+            elif values.gameObject == 'ball':
+                ball_position = Location(values.position.x, values.position.y, values.position.z)
+                ball_velocity = Velocity(values.velocity.x, values.velocity.y, values.velocity.z)
+                ball_angular_velocity = AngularVelocity(values.angularVelocity.x, values.angularVelocity.y,
+                                                        values.angularVelocity.z)
+                ball_rotation = EulerAngles(values.rotation.x, values.rotation.y, -values.rotation.z)
+
+        self.set_game_state(GameState(
+            ball=BallState(
+                physics=Physics(
+                    location=ball_position.convert(to_unity_units=False).to_game_state_vector(),
+                    rotation=ball_rotation.to_game_state_vector(),
+                    velocity=ball_velocity.convert(to_unity_units=False).to_game_state_vector(),
+                    angular_velocity=ball_angular_velocity.convert(to_unity_units=False).to_game_state_vector()
+                )
+            ),
+            cars={
+                0: CarState(
+                    physics=Physics(
+                        location=car_position.convert(to_unity_units=False).to_game_state_vector(),
+                        rotation=car_rotation.to_game_state_vector(),
+                        velocity=car_velocity.convert(to_unity_units=False).to_game_state_vector(),
+                        angular_velocity=car_angular_velocity.convert(to_unity_units=False).to_game_state_vector()
+                    )
+                )
+            },
+        ))
 
     @staticmethod
     def get_action_controls(inputs):
@@ -67,8 +106,6 @@ class TestBot(BaseAgent):
         scenario = config_object_header['scenarios'].value
         with open(scenario) as file:
             self.scenario = json.load(file, object_hook=ScenarioTestObject)
-
-        self.logger = Logger(self.scenario.name)
 
     @staticmethod
     def create_agent_configurations(config: ConfigObject):

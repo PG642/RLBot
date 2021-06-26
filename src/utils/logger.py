@@ -12,8 +12,10 @@ class Logger:
         self.name = name
         self.data = FrameList()
         self.start_time = time.time()
+        self.was_dumped = False
 
     def dump(self):
+        self.was_dumped = True
         i = 0
         while os.path.exists(self.name + str(i) + '.json'):
             i += 1
