@@ -11,8 +11,8 @@ from rlbot.utils.structures.game_data_struct import GameTickPacket
 from src.utils.sequence import Sequence, ControlStep
 from src.utils.scenario_test_object import ScenarioTestObject
 from src.utils.logger import Logger
+from src.utils.vec import Location, Velocity, AngularVelocity, EulerAngles
 
-from src.utils.vec import Location, Velocity, AngularVelocity, EulerAngles, Quaternion
 
 class TestBot(BaseAgent):
 
@@ -31,6 +31,7 @@ class TestBot(BaseAgent):
 
         if self.active_sequence is None:
             self.setup()
+            return SimpleControllerState()
 
         if self.active_sequence is not None and not self.active_sequence.done:
             self.logger.log(packet)
@@ -76,19 +77,19 @@ class TestBot(BaseAgent):
         self.set_game_state(GameState(
             ball=BallState(
                 physics=Physics(
-                    location=ball_position.convert(to_unity_units=False).to_game_state_vector(),
-                    rotation=ball_rotation.to_game_state_vector(),
-                    velocity=ball_velocity.convert(to_unity_units=False).to_game_state_vector(),
-                    angular_velocity=ball_angular_velocity.convert(to_unity_units=False).to_game_state_vector()
+                    location=ball_position.to_unreal_units().to_game_state_vector(),
+                    rotation=ball_rotation.to_unreal_units().to_game_state_vector(),
+                    velocity=ball_velocity.to_unreal_units().to_game_state_vector(),
+                    angular_velocity=ball_angular_velocity.to_unreal_units().to_game_state_vector()
                 )
             ),
             cars={
                 0: CarState(
                     physics=Physics(
-                        location=car_position.convert(to_unity_units=False).to_game_state_vector(),
-                        rotation=car_rotation.to_game_state_vector(),
-                        velocity=car_velocity.convert(to_unity_units=False).to_game_state_vector(),
-                        angular_velocity=car_angular_velocity.convert(to_unity_units=False).to_game_state_vector()
+                        location=car_position.to_unreal_units().to_game_state_vector(),
+                        rotation=car_rotation.to_unreal_units().to_game_state_vector(),
+                        velocity=car_velocity.to_unreal_units().to_game_state_vector(),
+                        angular_velocity=car_angular_velocity.to_unreal_units().to_game_state_vector()
                     )
                 )
             },

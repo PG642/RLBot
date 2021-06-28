@@ -224,6 +224,22 @@ class Vec4:
 
 
 class Location(Vec3):
+    def to_unity_units(self) -> 'Location':
+        tmp = self.x
+        self.x = self.y
+        self.y = self.z
+        self.z = tmp
+        self /= 100
+        return self
+
+    def to_unreal_units(self) -> 'Location':
+        tmp = self.z
+        self.z = self.y
+        self.y = self.x
+        self.x = tmp
+        self *= 100
+        return self
+
     def convert(self, to_unity_units: bool) -> 'Location':
         tmp = self.x
         self.x = self.z
@@ -237,6 +253,22 @@ class Location(Vec3):
 
 
 class Velocity(Vec3):
+    def to_unity_units(self) -> 'Velocity':
+        tmp = self.x
+        self.x = self.y
+        self.y = self.z
+        self.z = tmp
+        self /= 100
+        return self
+
+    def to_unreal_units(self) -> 'Velocity':
+        tmp = self.z
+        self.z = self.y
+        self.y = self.x
+        self.x = tmp
+        self *= 100
+        return self
+
     def convert(self, to_unity_units: bool) -> 'Velocity':
         tmp = self.x
         self.x = self.z
@@ -250,6 +282,20 @@ class Velocity(Vec3):
 
 
 class AngularVelocity(Vec3):
+    def to_unity_units(self) -> 'AngularVelocity':
+        tmp = self.x
+        self.x = self.y
+        self.y = self.z
+        self.z = tmp
+        return self
+
+    def to_unreal_units(self) -> 'AngularVelocity':
+        tmp = self.z
+        self.z = self.y
+        self.y = self.x
+        self.x = tmp
+        return self
+
     def convert(self, to_unity_units: bool) -> 'AngularVelocity':
         if to_unity_units:
             tmp = self.x
@@ -269,6 +315,12 @@ class EulerAngles(Vec3):
         self.x = pitch / 180 * math.pi
         self.y = yaw / 180 * math.pi
         self.z = roll / 180 * math.pi
+
+    def to_unity_units(self) -> 'EulerAngles':
+        return self
+
+    def to_unreal_units(self) -> 'EulerAngles':
+        return self
 
     def to_game_state_vector(self):
         return Rotator(self.x, self.y, self.z)
@@ -302,6 +354,20 @@ class Quaternion(Vec4):
             self.y = y
             self.z = z
             self.w = w
+
+    def to_unity_units(self) -> 'Quaternion':
+        tmp = self.x
+        self.x = self.y
+        self.y = self.z
+        self.z = tmp
+        return self
+
+    def to_unreal_units(self) -> 'Quaternion':
+        tmp = self.z
+        self.z = self.y
+        self.y = self.x
+        self.x = tmp
+        return self
 
     def convert(self,  to_unity_units: bool) -> 'Quaternion':
         return self
