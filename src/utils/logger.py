@@ -50,7 +50,7 @@ class GameObject:
 class Physics:
     def __init__(self, physics: PhysicsInfo):
         self.location = Location(physics.location).to_unity_units()
-        self.rotation = Quaternion(physics.rotation).to_unity_units()
+        self.rotation = EulerAngles(physics.rotation).to_unity_units()
         self.velocity = Velocity(physics.velocity).to_unity_units()
         self.angular_velocity = AngularVelocity(physics.angular_velocity).to_unity_units()
 
@@ -67,7 +67,7 @@ class ComplexEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, (FrameList, Frame, GameObject, Physics, Car)):
             return obj.__dict__
-        elif isinstance(obj, (Vec3, Location, Quaternion, Velocity, AngularVelocity)):
+        elif isinstance(obj, (Vec3, Location, Quaternion, Velocity, AngularVelocity, EulerAngles)):
             return {slot: getattr(obj, slot) for slot in obj.__slots__}
         else:
             return json.JSONEncoder.default(self, obj)

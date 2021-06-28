@@ -311,15 +311,44 @@ class AngularVelocity(Vec3):
 
 
 class EulerAngles(Vec3):
-    def __init__(self, pitch: float = 0, yaw: float = 0, roll: float = 0):
-        self.x = pitch / 180 * math.pi
-        self.y = yaw / 180 * math.pi
-        self.z = roll / 180 * math.pi
+    def __init__(self, pitch: Union[float, 'Quaternion', 'Rotator'] = 0, yaw: float = 0, roll: float = 0):
+        if isinstance(pitch, Quaternion):
+            q = pitch
+
+            t0 = 2.0 * (q.w * q.y - q.z * q.x)
+            t0 = 1.0 if t0 > +1.0 else t0
+            t0 = -1.0 if t0 < -1.0 else t0
+            self.x = math.degrees(math.asin(t0))
+
+            t1 = 2.0 * (q.w * q.z + q.x * q.y)
+            t2 = 1.0 - 2.0 * (q.y * q.y + q.z * q.z)
+            self.y = math.degrees(math.atan2(t1, t2))
+
+            t3 = 2.0 * (q.w * q.x + q.y * q.z)
+            t4 = 1.0 - 2.0 * (q.x * q.x + q.y * q.y)
+            self.z = math.degrees(math.atan2(t3, t4))
+        elif isinstance(Rotator):
+            r = pitch
+            self.x = r.pitch / math.pi * 180
+            self.y = r.yaw / math.pi * 180
+            self.z = r.roll / math.pi * 180
+        else:
+            self.x = pitch / 180 * math.pi
+            self.y = yaw / 180 * math.pi
+            self.z = roll / 180 * math.pi
 
     def to_unity_units(self) -> 'EulerAngles':
+        tmp = self.x
+        self.x = self.y
+        self.y = self.z
+        self.z = tmp
         return self
 
     def to_unreal_units(self) -> 'EulerAngles':
+        tmp = self.z
+        self.z = self.y
+        self.y = self.x
+        self.x = tmp
         return self
 
     def to_game_state_vector(self):
