@@ -1,7 +1,9 @@
 
 import tkinter as tk
+from tkinter import ttk
 from tkinter.constants import DISABLED, NORMAL
 import pandas as pd
+import os
 from comparator import Comparator
 from visualization import visualize
 
@@ -67,7 +69,7 @@ class CheckBar:
                     self.vars[idx].set(1)
                     break
 
-    def enable(self):
+    def enable(self, rename=None):
         for idx, checkbox in enumerate(self.checkboxes):
             if checkbox.cget("state") == DISABLED:
                 checkbox.config(state=NORMAL)
@@ -75,30 +77,63 @@ class CheckBar:
                     self.last_checked_index = idx
                     self.vars[idx].set(1)
                     checkbox.select()
+        if rename is not None and rename == 'Rotation':
+            self.names = ['pitch', 'yaw', 'roll']
+            self.checkboxes[0].text = 'pitch'
+        elif rename is not None:
+            self.names = ['x', 'y', 'z']
+
 
 
 
 class TestGUI:
     def __init__(self):
         self.window = tk.Tk()
-        self.window.title('Vergleichstool')
+        self.window.title('Comparison tool')
         self.window.geometry('500x200')
 
-        start_button = tk.Button(self.window, text="Aktion durchführen", command=self.show_plot)
-        start_button.grid(row = 6, column=5)
+        
+        dirname = os.path.dirname(__file__)
+
+        path_rlbot_results = os.path.join(dirname, '../../../Physikabgleich/Ergebnisse/RLBot/')
+        path_roboleague_results = os.path.join(dirname, '../../../Physikabgleich/Ergebnisse/RoboLeague/')
+
+        results_rlbot = [f.split('.')[0] for f in os.listdir(path_rlbot_results) if os.path.isfile(os.path.join(path_rlbot_results, f))]
+        results_roboleague = [f.split('.')[0] for f in os.listdir(path_roboleague_results) if os.path.isfile(os.path.join(path_roboleague_results, f))]
+
+        scenarios = list(set(results_rlbot) & set(results_roboleague))
+    
+        if(len(scenarios) == 0):
+            print("ERROR: No matching files in '../Ergebnisse/RLBot/' and '../Ergebnisse/RoboLeague/'!")
+            return
+        
+        labelTop = tk.Label(self.window,  text = "Choose your scenario:")
+        labelTop.grid(row = 1, column=5)
+
+        self.combobox = ttk.Combobox(self.window, state="readonly", values=scenarios)
+        self.combobox.grid(row = 2, column=5)
+        self.combobox.current(0)
+
+        start_button = tk.Button(self.window, text="Compare results", command=self.show_plot)
+        start_button.grid(row = 3, column=5)
 
         self.level_1 = CheckBar(self.window, ['Ball', 'Car'], 1, 1, self)
         self.level_2 = CheckBar(self.window, ['Physics', 'Jumped', 'Boost'], 1, 2, self)
         self.level_3 = CheckBar(self.window, ['Location', 'Rotation', 'Velocity', 'Angular_Velocity'], 1, 3, self)
-        self.level_4 = CheckBar(self.window, ['x', 'y', 'z'], 1, 4, self)
+        self.level_4 = CheckBar(self.window, ['x/pitch', 'y/yaw', 'z/roll'], 1, 4, self)
+        self.level_4.enable(rename="")
 
         self.update()
-
         self.comp = Comparator()
+        self.comp.load_scenario_results(self.combobox.get())
 
         self.window.mainloop()
 
+    def load_scenario(self):
+        self.comp.load_scenario_results(self.combobox.get())
+
     def show_plot(self):
+        self.load_scenario()
         df_plot, title, labels = self.extract_df_to_plot(self.level_1.get_checked_name(), self.level_2.get_checked_name(), self.level_3.get_checked_name(), self.level_4.get_checked_name())
         visualize(df_plot, title, labels)
 
@@ -111,14 +146,13 @@ class TestGUI:
             self.level_4.disable()
         else:
             self.level_3.enable()
-            self.level_4.enable()
+            self.level_4.enable( rename=self.level_3.get_checked_name())
 
 
     def extract_df_to_plot(self, *args):
         rlbot_results = self.comp.rlbot_results 
         roboleague_results = self.comp.roboleague_results
         title = ""
-
         for arg in args:
             if arg is None:
                 continue

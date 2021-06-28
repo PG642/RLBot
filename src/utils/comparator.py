@@ -9,9 +9,19 @@ specifies a path to the test result json files and saves the loaded data
 class Comparator:
     def __init__(self):
         dirname = os.path.dirname(__file__)
-        path = os.path.join(dirname, '../scenarios/')
-        self.rlbot_results = load_test_results(path, 'Neuer_Test0.json')
-        self.roboleague_results = load_test_results(path, 'Neuer_Test0.json')
+        path = os.path.join(dirname, '../../../Physikabgleich/Ergebnisse/')
+        self.path_rlbot = os.path.join(path, 'RLBot/')
+        self.path_roboleague = os.path.join(path, 'RoboLeague/')
+        self.rlbot_results = None
+        self.roboleague_results = None
+
+    '''
+    return true for every frame where the difference between the rlbot and roboleague data is within rounding error
+    '''
+    def load_scenario_results(self, scenarioname):
+        self.rlbot_results = load_test_results(self.path_rlbot,  scenarioname + '.json')
+        self.roboleague_results = load_test_results(self.path_roboleague, scenarioname + '.json')
+
 
 '''
 return true for every frame where the difference between the rlbot and roboleague data is within rounding error
@@ -47,11 +57,10 @@ def load_test_results(path, filename):
     car_location['z'] = [frame['game_cars'][0]['physics']['location']['z'] for frame in frames]
 
     car_rotation = pd.DataFrame([])
-    '''
     car_rotation['pitch'] = [frame['game_cars'][0]['physics']['rotation']['pitch'] for frame in frames]
     car_rotation['yaw'] = [frame['game_cars'][0]['physics']['rotation']['yaw'] for frame in frames]
     car_rotation['roll'] = [frame['game_cars'][0]['physics']['rotation']['roll'] for frame in frames]
-'''
+
     car_velocity = pd.DataFrame([])
     car_velocity['x'] = [frame['game_cars'][0]['physics']['velocity']['x'] for frame in frames]
     car_velocity['y'] = [frame['game_cars'][0]['physics']['velocity']['y'] for frame in frames]
@@ -68,11 +77,10 @@ def load_test_results(path, filename):
     ball_location['z'] = [frame['game_ball']['physics']['location']['z'] for frame in frames]
 
     ball_rotation = pd.DataFrame([])
-    '''
     ball_rotation['pitch'] = [frame['game_ball']['physics']['rotation']['pitch'] for frame in frames]
     ball_rotation['yaw'] = [frame['game_ball']['physics']['rotation']['yaw'] for frame in frames]
     ball_rotation['roll'] = [frame['game_ball']['physics']['rotation']['roll'] for frame in frames]
-'''
+
     ball_velocity = pd.DataFrame([])
     ball_velocity['x'] = [frame['game_ball']['physics']['velocity']['x'] for frame in frames]
     ball_velocity['y'] = [frame['game_ball']['physics']['velocity']['y'] for frame in frames]
