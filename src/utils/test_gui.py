@@ -2,7 +2,7 @@
 import tkinter as tk
 import pandas as pd
 from comparator import Comparator
-from visualization import Visualizer
+from visualization import visualize
 
 
 class CheckBar:
@@ -58,13 +58,11 @@ class TestGUI:
     
         self.comp = Comparator()
 
-        self.visualizer = Visualizer()
-
         self.window.mainloop()
 
     def show_plot(self):
         df_plot, title, labels = self.extract_df_to_plot(self.level1.get_checked_name(), self.level2.get_checked_name(), self.level3.get_checked_name(), self.level4.get_checked_name())
-        self.visualizer.visualize(df_plot, title, labels)
+        visualize(df_plot, title, labels)
 
     def extract_df_to_plot(self, *args):
         rlbot_results = self.comp.rlbot_results 
@@ -83,7 +81,7 @@ class TestGUI:
         return df_plot, title, {'value':'Unity units', 'index':'Frame'}
 
     def create_figure(self, df_plot, title, labels):
-        return self.visualizer.visualize(df_plot, title, labels)
+        return visualize(df_plot, title, labels)
 
 def main():
     TestGUI()
