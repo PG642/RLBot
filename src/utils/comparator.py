@@ -1,27 +1,22 @@
 import json
-import os
-import time
-
-from rlbot.utils.structures.game_data_struct import GameTickPacket, PlayerInfo, BallInfo, Physics as PhysicsInfo
-from src.utils.vec import Vec3, Location, EulerAngles, Velocity, AngularVelocity, Quaternion
-from typing import Union
-from logger import Frame, FrameList
-from src.utils.scenario_test_object import ScenarioTestObject
+from scenario_test_object import ScenarioTestObject
 import pandas as pd
-
+import os
+import math
 
 class Comparator:
     def __init__(self):
-        path = []
-        self.rlbot_results = self.load_test_results(path, 'rlbot')
-        self.roboleague_results = self.load_test_results(path, 'roboleague')
+        dirname = os.path.dirname(__file__)
+        path = os.path.join(dirname, '../scenarios/')
+        self.rlbot_results = self.load_test_results(path, 'Neuer_Test0.json')
+        self.roboleague_results = self.load_test_results(path, 'Neuer_Test0.json')
 
-    def load_test_results(self, config_object_header, source):
-        data = config_object_header[source].value
-        with open(data) as file:
-            results_json = json.load(file, object_hook=ScenarioTestObject)
+    def load_test_results(self, path, filename):
+        data = path + filename
+        with open(data, 'rb') as fb:
+            results_json = json.load(fb)#, object_hook=ScenarioTestObject)
 
-        frames = results_json.frames
+        frames = results_json['frames']
 
         car_location = pd.DataFrame([])
         car_location['x'] = [frame['game_cars'][0]['physics']['location']['x'] for frame in frames]
@@ -29,9 +24,9 @@ class Comparator:
         car_location['z'] = [frame['game_cars'][0]['physics']['location']['z'] for frame in frames]
 
         car_rotation = pd.DataFrame([])
-        car_rotation['pitch'] = [frame['game_cars'][0]['physics']['rotation']['pitch'] for frame in frames]
-        car_rotation['yaw'] = [frame['game_cars'][0]['physics']['rotation']['yaw'] for frame in frames]
-        car_rotation['roll'] = [frame['game_cars'][0]['physics']['rotation']['roll'] for frame in frames]
+        #car_rotation['pitch'] = [frame['game_cars'][0]['physics']['rotation']['pitch'] for frame in frames]
+        #car_rotation['yaw'] = [frame['game_cars'][0]['physics']['rotation']['yaw'] for frame in frames]
+        #car_rotation['roll'] = [frame['game_cars'][0]['physics']['rotation']['roll'] for frame in frames]
 
         car_velocity = pd.DataFrame([])
         car_velocity['x'] = [frame['game_cars'][0]['physics']['velocity']['x'] for frame in frames]
@@ -49,9 +44,12 @@ class Comparator:
         ball_location['z'] = [frame['game_ball']['physics']['location']['z'] for frame in frames]
 
         ball_rotation = pd.DataFrame([])
-        ball_rotation['pitch'] = [frame['game_ball']['physics']['rotation']['pitch'] for frame in frames]
-        ball_rotation['yaw'] = [frame['game_ball']['physics']['rotation']['yaw'] for frame in frames]
-        ball_rotation['roll'] = [frame['game_ball']['physics']['rotation']['roll'] for frame in frames]
+        #roll  = math.atan2(2.0 * (q.q3 * q.q2 + q.q0 * q.q1) , 1.0 - 2.0 * (q.q1 * q.q1 + q.q2 * q.q2))
+        #pitch = math.asin(2.0 * (q.q2 * q.q0 - q.q3 * q.q1))
+        #yaw   = math.atan2(2.0 * (q.q3 * q.q0 + q.q1 * q.q2) , - 1.0 + 2.0 * (q.q0 * q.q0 + q.q1 * q.q1))
+        #ball_rotation['pitch'] = [frame['game_ball']['physics']['rotation']['pitch'] for frame in frames]
+        #ball_rotation['yaw'] = [frame['game_ball']['physics']['rotation']['yaw'] for frame in frames]
+        #ball_rotation['roll'] = [frame['game_ball']['physics']['rotation']['roll'] for frame in frames]
 
         ball_velocity = pd.DataFrame([])
         ball_velocity['x'] = [frame['game_ball']['physics']['velocity']['x'] for frame in frames]
