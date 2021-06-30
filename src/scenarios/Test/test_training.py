@@ -1,15 +1,13 @@
-from math import pi
 from dataclasses import dataclass, field
 
-from rlbottraining.training_exercise import TrainingExercise
+from rlbot.utils.game_state_util import GameState
+from rlbottraining.common_graders.compound_grader import CompoundGrader
 from rlbottraining.grading.grader import Grader
 from rlbottraining.rng import SeededRandomNumberGenerator
 from rlbottraining.training_exercise import Playlist
-from rlbot.utils.game_state_util import GameState, BallState, CarState, Physics, Vector3, Rotator
-from rlbottraining.common_graders.compound_grader import CompoundGrader
+from rlbottraining.training_exercise import TrainingExercise
 
-from src.graders.pass_graders import PassOnBallGoingAwayFromGoal, PassOnGoalForAllyTeam, PassOnTimeout
-from src.utils.vec import Vec3, Location, Velocity, AngularVelocity, EulerAngles
+from src.graders.pass_graders import PassOnTimeout
 from src.utils.scenario_test_object import ScenarioTestObject
 
 

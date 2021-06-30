@@ -68,6 +68,9 @@ class ComplexEncoder(json.JSONEncoder):
         if isinstance(obj, (FrameList, Frame, GameObject, Physics, Car)):
             return obj.__dict__
         elif isinstance(obj, (Vec3, Location, Quaternion, Velocity, AngularVelocity, EulerAngles)):
-            return {slot: getattr(obj, slot) for slot in obj.__slots__}
-        else:
-            return json.JSONEncoder.default(self, obj)
+            result = dict()
+            for slot in obj.__slots__:
+                if slot != 'unit_system':
+                    result[slot] = getattr(obj, slot)
+            return result
+        return json.JSONEncoder.default(self, obj)

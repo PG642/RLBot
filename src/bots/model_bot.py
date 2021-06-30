@@ -27,12 +27,12 @@ class MyBot(BaseAgent):
         car_physics = packet.game_cars[self.index].physics
         ball_physics = packet.game_ball.physics
 
-        car_location = Location(car_physics.location).convert(to_unity_units=True)
-        car_velocity = Velocity(car_physics.velocity).convert(to_unity_units=True)
-        car_rotation = Quaternion(car_physics.rotation).convert(to_unity_units=True)
-        car_angular_velocity = AngularVelocity(car_physics.angular_velocity).convert(to_unity_units=True)
-        ball_location = Location(ball_physics.location).convert(to_unity_units=True)
-        ball_velocity = Velocity(ball_physics.velocity).convert(to_unity_units=True)
+        car_location = Location(car_physics.location).to_unity_units()
+        car_velocity = Velocity(car_physics.velocity).to_unity_units()
+        car_rotation = Quaternion(car_physics.rotation).to_unity_units()
+        car_angular_velocity = AngularVelocity(car_physics.angular_velocity).to_unity_units()
+        ball_location = Location(ball_physics.location).to_unity_units()
+        ball_velocity = Velocity(ball_physics.velocity).to_unity_units()
 
         # get input shape of model and set batch size to one
         input_shape = self.model.get_input_shape()
@@ -51,7 +51,7 @@ class MyBot(BaseAgent):
 
         controls = SimpleControllerState()
         controls.throttle = output[0]
-        controls.steer = max(min(20 * output[1], 1), -1)
+        controls.steer = max(min(output[1], 1), -1)
         controls.yaw = output[1]
         controls.pitch = output[2]
         if output[3] > 0:

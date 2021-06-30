@@ -1,6 +1,4 @@
 import json
-import time
-from pathlib import Path
 
 from rlbot.agents.base_agent import BaseAgent, SimpleControllerState, BOT_CONFIG_AGENT_HEADER
 from rlbot.messages.flat.QuickChatSelection import QuickChatSelection
@@ -11,17 +9,16 @@ from rlbot.utils.structures.game_data_struct import GameTickPacket
 from src.utils.sequence import Sequence, ControlStep
 from src.utils.scenario_test_object import ScenarioTestObject
 from src.utils.logger import Logger
-from src.utils.vec import Location, Velocity, AngularVelocity, EulerAngles
+from src.utils.vec import Location, Velocity, AngularVelocity, EulerAngles, UnitSystem
 
 
 class TestBot(BaseAgent):
 
     def __init__(self, name, team, index):
         super().__init__(name, team, index)
-        self.active_sequence: Sequence = None
+        self.active_sequence = None
         self.scenario = None
         self.logger = None
-        print('Init')
 
     def get_output(self, packet: GameTickPacket) -> SimpleControllerState:
         """
@@ -58,42 +55,31 @@ class TestBot(BaseAgent):
 
         self.active_sequence = Sequence(control_step_list)
 
+    @staticmethod
+    def get_physics(values) -> 'Physics':
+        position = Location(values.position.x, values.position.y, values.position.z, UnitSystem.UNITY)
+        velocity = Velocity(values.velocity.x, values.velocity.y, values.velocity.z, UnitSystem.UNITY)
+        angular_velocity = AngularVelocity(values.angularVelocity.x, values.angularVelocity.y, values.angularVelocity.z,
+                                           UnitSystem.UNITY)
+        rotation = EulerAngles(values.rotation.x, values.rotation.y, -values.rotation.z, UnitSystem.UNITY)
+        return Physics(
+            location=position.to_unreal_units().to_game_state_vector(),
+            rotation=rotation.to_unreal_units().to_game_state_vector(),
+            velocity=velocity.to_unreal_units().to_game_state_vector(),
+            angular_velocity=angular_velocity.to_unreal_units().to_game_state_vector()
+        )
+
     def setup_game_state(self):
         start_values = self.scenario.startValues
+        gs = GameState()
+        gs.cars = dict()
         for values in start_values:
             if values.gameObject == 'car':
-                car_position = Location(values.position.x, values.position.y, values.position.z)
-                car_velocity = Velocity(values.velocity.x, values.velocity.y, values.velocity.z)
-                car_angular_velocity = AngularVelocity(values.angularVelocity.x, values.angularVelocity.y,
-                                                       values.angularVelocity.z)
-                car_rotation = EulerAngles(values.rotation.x, values.rotation.y, -values.rotation.z)
+                gs.cars[len(gs.cars)] = CarState(physics=self.get_physics(values))
             elif values.gameObject == 'ball':
-                ball_position = Location(values.position.x, values.position.y, values.position.z)
-                ball_velocity = Velocity(values.velocity.x, values.velocity.y, values.velocity.z)
-                ball_angular_velocity = AngularVelocity(values.angularVelocity.x, values.angularVelocity.y,
-                                                        values.angularVelocity.z)
-                ball_rotation = EulerAngles(values.rotation.x, values.rotation.y, -values.rotation.z)
+                gs.ball = BallState(physics=self.get_physics(values))
 
-        self.set_game_state(GameState(
-            ball=BallState(
-                physics=Physics(
-                    location=ball_position.to_unreal_units().to_game_state_vector(),
-                    rotation=ball_rotation.to_unreal_units().to_game_state_vector(),
-                    velocity=ball_velocity.to_unreal_units().to_game_state_vector(),
-                    angular_velocity=ball_angular_velocity.to_unreal_units().to_game_state_vector()
-                )
-            ),
-            cars={
-                0: CarState(
-                    physics=Physics(
-                        location=car_position.to_unreal_units().to_game_state_vector(),
-                        rotation=car_rotation.to_unreal_units().to_game_state_vector(),
-                        velocity=car_velocity.to_unreal_units().to_game_state_vector(),
-                        angular_velocity=car_angular_velocity.to_unreal_units().to_game_state_vector()
-                    )
-                )
-            },
-        ))
+        self.set_game_state(gs)
 
     @staticmethod
     def get_action_controls(inputs):
