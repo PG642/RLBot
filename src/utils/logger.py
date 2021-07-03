@@ -8,19 +8,15 @@ from typing import Union
 
 
 class Logger:
-    def __init__(self, name: str):
-        self.name = name
+    def __init__(self, log_path: str):
+        self.log_path = log_path
         self.data = FrameList()
         self.start_time = time.time()
         self.was_dumped = False
 
     def dump(self):
         self.was_dumped = True
-        i = 0
-        while os.path.exists(self.name + str(i) + '.json'):
-            i += 1
-
-        with open(self.name + str(i) + '.json', 'w') as logfile:
+        with open(self.log_path, 'w') as logfile:
             json.dump(self.data, logfile, cls=ComplexEncoder, indent=4)
 
     def log(self, packet: GameTickPacket):

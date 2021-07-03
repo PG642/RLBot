@@ -20,6 +20,7 @@ class TestBot(BaseAgent):
         self.active_sequence = None
         self.scenario = None
         self.logger = None
+        self.log_path = None
 
     def get_output(self, packet: GameTickPacket) -> SimpleControllerState:
         """
@@ -51,7 +52,7 @@ class TestBot(BaseAgent):
         If the actions don't fill the whole scenario time an idle action is appended so log more packets
         """
         self.send_quick_chat(team_only=False, quick_chat=QuickChatSelection.Information_IGotIt)
-        self.logger = Logger(self.scenario.name)
+        self.logger = Logger(self.log_path)
 
         acc_durations = 0.0
 
@@ -120,6 +121,7 @@ class TestBot(BaseAgent):
             settings = json.load(settings_file, object_hook=ScenarioTestObject)
             with open(settings.path_to_settings) as scenario_settings_file:
                 scenario_settings = json.load(scenario_settings_file, object_hook=ScenarioTestObject)
+                self.log_path = os.path.join(scenario_settings.results_path_rl_bot, scenario_settings.file_name)
                 with open(os.path.join(scenario_settings.szenario_path, scenario_settings.file_name)) as scenario_file:
                     self.scenario = json.load(scenario_file, object_hook=ScenarioTestObject)
 
