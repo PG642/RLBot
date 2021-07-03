@@ -123,7 +123,7 @@ class TestBot(BaseAgent):
                 scenario_settings = json.load(scenario_settings_file, object_hook=JSONObject)
                 with open(os.path.join(scenario_settings.szenario_path, scenario_settings.file_name)) as scenario_file:
                     self.scenario = json.load(scenario_file, object_hook=JSONObject)
-                    self.log_path = os.path.join(scenario_settings.results_path_rl_bot, self.scenario.name)
+                    self.log_path = os.path.join(scenario_settings.results_path_rl_bot, self.scenario.name + '.json')
 
     @staticmethod
     def create_agent_configurations(config: ConfigObject):
