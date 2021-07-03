@@ -2,15 +2,23 @@ import math
 from typing import Union
 
 from rlbot.utils.game_state_util import Vector3, Rotator
+from rlbot.utils.structures.game_data_struct import Rotator as GDRotator
 
 from math import cos, sin
+
+from enum import Enum
+
+
+class UnitSystem(Enum):
+    UNITY = 1,
+    UNREAL = 2
 
 
 class Vec3:
     """
     This class should provide you with all the basic vector operations that you need, but feel free to extend its
     functionality when needed.
-    The vectors found in the GameTickPacket will be flatbuffer vectors. Cast them to Vec3 like this:
+    The vectors found in the GameTickPacket will be flat buffer vectors. Cast them to Vec3 like this:
     `car_location = Vec3(car.physics.location)`.
 
     Remember that the in-game axis are left-handed.
@@ -21,10 +29,12 @@ class Vec3:
     __slots__ = [
         'x',
         'y',
-        'z'
+        'z',
+        'unit_system'
     ]
 
-    def __init__(self, x: Union[float, 'Vec3', 'Vector3'] = 0, y: float = 0, z: float = 0):
+    def __init__(self, x: Union[float, 'Vec3', 'Vector3'] = 0, y: float = 0, z: float = 0,
+                 unit_system: UnitSystem = UnitSystem.UNREAL):
         """
         Create a new Vec3. The x component can alternatively be another vector with an x, y, and z component, in which
         case the created vector is a copy of the given vector and the y and z parameter is ignored. Examples:
@@ -44,6 +54,7 @@ class Vec3:
             self.x = float(x)
             self.y = float(y)
             self.z = float(z)
+        self.unit_system = unit_system
 
     def __getitem__(self, item: int):
         return (self.x, self.y, self.z)[item]
@@ -117,8 +128,8 @@ class Vec3:
 class Vec4:
     """
     This class should provide you with all the basic vector operations that you need, but feel free to extend its
-    functionaleity when neded.
-    The vectors found in the GameTickPacket will be flatbuffer vectors. Cast them to Vec3 like this:
+    functionality when needed.
+    The vectors found in the GameTickPacket will be flat buffer vectors. Cast them to Vec3 like this:
     `car_location = Vec4(car.physics.location)`.
 
     Remember that the in-game axis are left-handed.
@@ -130,10 +141,12 @@ class Vec4:
         'x',
         'y',
         'z',
-        'w'
+        'w',
+        'unit_system'
     ]
 
-    def __init__(self, x: Union[float, 'Vec4'] = 0, y: float = 0, z: float = 0, w: float = 0):
+    def __init__(self, x: Union[float, 'Vec4'] = 0, y: float = 0, z: float = 0, w: float = 0,
+                 unit_system: UnitSystem = UnitSystem.UNREAL):
         """
         Create a new Vec4. The x component can alternatively be another vector with an x, y, z and w component, in which
         case the created vector is a copy of the given vector and the y, z and w parameter are ignored. Examples:
@@ -155,6 +168,7 @@ class Vec4:
             self.y = float(y)
             self.z = float(z)
             self.w = float(w)
+        self.unit_system = unit_system
 
     def __getitem__(self, item: int):
         return (self.x, self.y, self.z, self.w)[item]
@@ -224,46 +238,149 @@ class Vec4:
 
 
 class Location(Vec3):
-    def convert(self, to_unity_units: bool) -> 'Location':
+    def to_unity_units(self) -> 'Location':
+        if self.unit_system == UnitSystem.UNITY:
+            return self
+
         tmp = self.x
         self.x = self.y
-        self.y = tmp
-        if to_unity_units:
-            self / 100
-        else:
-            self * 100
+        self.y = self.z
+        self.z = tmp
+        self /= 100
+        self.unit_system = UnitSystem.UNITY
+        return self
+
+    def to_unreal_units(self) -> 'Location':
+        if self.unit_system == UnitSystem.UNREAL:
+            return self
+
+        tmp = self.z
+        self.z = self.y
+        self.y = self.x
+        self.x = tmp
+        self *= 100
+        self.unit_system = UnitSystem.UNREAL
         return self
 
 
 class Velocity(Vec3):
-    def convert(self, to_unity_units: bool) -> 'Velocity':
+    def to_unity_units(self) -> 'Velocity':
+        if self.unit_system == UnitSystem.UNITY:
+            return self
+
         tmp = self.x
         self.x = self.y
-        self.y = tmp
-        if to_unity_units:
-            self / 100
-        else:
-            self * 100
+        self.y = self.z
+        self.z = tmp
+        self /= 100
+        self.unit_system = UnitSystem.UNITY
+        return self
+
+    def to_unreal_units(self) -> 'Velocity':
+        if self.unit_system == UnitSystem.UNREAL:
+            return self
+
+        tmp = self.z
+        self.z = self.y
+        self.y = self.x
+        self.x = tmp
+        self *= 100
+        self.unit_system = UnitSystem.UNREAL
         return self
 
 
 class AngularVelocity(Vec3):
-    def convert(self, to_unity_units: bool) -> 'AngularVelocity':
-        if to_unity_units:
-            tmp = self.x
-            self.x = self.y
-            self.y = self.z
-            self.z = tmp
-        else:
-            tmp = self.z
-            self.z = self.y
-            self.y = self.x
-            self.x = tmp
+    def to_unity_units(self) -> 'AngularVelocity':
+        if self.unit_system == UnitSystem.UNITY:
+            return self
+
+        tmp = self.x
+        self.x = self.y
+        self.y = self.z
+        self.z = tmp
+        self.unit_system = UnitSystem.UNITY
+        return self
+
+    def to_unreal_units(self) -> 'AngularVelocity':
+        if self.unit_system == UnitSystem.UNREAL:
+            return self
+
+        tmp = self.z
+        self.z = self.y
+        self.y = self.x
+        self.x = tmp
+        self.unit_system = UnitSystem.UNREAL
         return self
 
 
+class EulerAngles(Vec3):
+    def __init__(self, pitch: Union[float, 'Quaternion', 'Rotator', 'GDRotator'] = 0, yaw: float = 0, roll: float = 0,
+                 unit_system: UnitSystem = UnitSystem.UNREAL):
+        super().__init__()
+        if isinstance(pitch, Quaternion):
+            q = pitch
+
+            t0 = 2.0 * (q.w * q.y - q.z * q.x)
+            t0 = 1.0 if t0 > +1.0 else t0
+            t0 = -1.0 if t0 < -1.0 else t0
+            self.x = math.degrees(math.asin(t0))
+
+            t1 = 2.0 * (q.w * q.z + q.x * q.y)
+            t2 = 1.0 - 2.0 * (q.y * q.y + q.z * q.z)
+            self.y = math.degrees(math.atan2(t1, t2))
+
+            t3 = 2.0 * (q.w * q.x + q.y * q.z)
+            t4 = 1.0 - 2.0 * (q.x * q.x + q.y * q.y)
+            self.z = math.degrees(math.atan2(t3, t4))
+            self.unit_system = q.unit_system
+        elif isinstance(pitch, (Rotator, GDRotator)):
+            r = pitch
+            self.x = r.pitch / math.pi * 180
+            self.y = r.yaw / math.pi * 180
+            self.z = r.roll / math.pi * 180
+            self.unit_system = UnitSystem.UNREAL
+        else:
+            self.x = pitch
+            self.y = yaw
+            self.z = roll
+            self.unit_system = UnitSystem.UNITY
+
+    def to_unity_units(self) -> 'EulerAngles':
+        self.unit_system = UnitSystem.UNITY
+        return self
+
+    #    if self.unit_system == UnitSystem.UNITY:
+    #        return self
+    #
+    #     tmp = self.x
+    #     self.x = self.y
+    #     self.y = self.z
+    #     self.z = tmp
+    #     self.unit_system = UnitSystem.UNITY
+    #     return self
+    #
+    def to_unreal_units(self) -> 'EulerAngles':
+        self.unit_system = UnitSystem.UNREAL
+        return self
+
+    # if self.unit_system == UnitSystem.UNREAL:
+    #     return self
+    #
+    #     tmp = self.z
+    #     self.z = self.y
+    #     self.y = self.x
+    #     self.x = tmp
+    #     self.unit_system = UnitSystem.UNREAL
+    #     return self
+
+    def to_game_state_vector(self):
+        return Rotator(self.x / 180 * math.pi, self.y / 180 * math.pi, self.z / 180 * math.pi)
+
+
 class Quaternion(Vec4):
-    def __init__(self, x: Union[float, 'Quaternion', 'Rotator'] = 0, y: float = 0, z: float = 0, w: float = 0):
+    def __init__(self, x: Union[float, 'Quaternion', 'Rotator', 'GDRotator'] = 0, y: float = 0, z: float = 0,
+                 w: float = 0, unit_system: UnitSystem = UnitSystem.UNREAL):
+        super().__init__()
         if hasattr(x, 'pitch'):
             # x are euler angles
             cy = cos(x.yaw * 0.5)
@@ -289,6 +406,29 @@ class Quaternion(Vec4):
             self.y = y
             self.z = z
             self.w = w
+        if isinstance(x, Quaternion):
+            self.unit_system = x.unit_system
+        else:
+            self.unit_system = unit_system
 
-    def convert(self,  to_unity_units: bool) -> 'Quaternion':
+    def to_unity_units(self) -> 'Quaternion':
+        if self.unit_system == UnitSystem.UNITY:
+            return self
+
+        tmp = self.x
+        self.x = self.y
+        self.y = self.z
+        self.z = tmp
+        self.unit_system = UnitSystem.UNITY
+        return self
+
+    def to_unreal_units(self) -> 'Quaternion':
+        if self.unit_system == UnitSystem.UNREAL:
+            return self
+
+        tmp = self.z
+        self.z = self.y
+        self.y = self.x
+        self.x = tmp
+        self.unit_system = UnitSystem.UNREAL
         return self

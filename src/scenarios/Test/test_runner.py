@@ -1,0 +1,60 @@
+import configparser
+import json
+from pathlib import Path
+
+import rlbottraining.exercise_runner as er
+from rlbot.matchconfig.conversions import read_match_config_from_file
+from rlbot.matchconfig.match_config import Team, PlayerConfig
+from rlbottraining.training_exercise import Playlist
+
+from src.utils.scenario_test_object import JSONObject
+from test_training import TestExercise
+
+import os
+
+
+def make_match_config():
+    """
+    Creates a match config supplied with a player config that loads a bot that is configured by test_bot.cfg
+    """
+    result_match_config = read_match_config_from_file(Path('test_match.cfg'))
+    player_config = PlayerConfig.bot_config(
+        Path(__file__).absolute().parent / 'test_bot.cfg', Team.BLUE)
+    result_match_config.player_configs = [
+        player_config
+    ]
+    return result_match_config
+
+
+match_config = make_match_config()
+
+
+def make_default_playlist() -> Playlist:
+    # Load scenario file from settings to build the playlist
+    with open('./settings.json') as settings_file:
+        settings = json.load(settings_file, object_hook=JSONObject)
+        with open(settings.path_to_settings) as scenario_settings_file:
+            scenario_settings = json.load(scenario_settings_file, object_hook=JSONObject)
+            with open(os.path.join(scenario_settings.szenario_path, scenario_settings.file_name)) as scenario_file:
+                scenario = json.load(scenario_file, object_hook=JSONObject)
+
+    # Build up the actual playlist with the previously created match config
+    exercises = [
+        TestExercise(name='TestExercise1', scenario=scenario)
+    ]
+    for e in exercises:
+        e.match_config = match_config
+    return exercises
+
+
+if __name__ == "__main__":
+    with er.setup_manager_context() as setup_manager:
+        er.apply_render_policy(er.RenderPolicy.DEFAULT, setup_manager)
+        seed = er.infinite_seed_generator()
+        playlist = make_default_playlist()
+
+        exercise = [er.TrainingExerciseAdapter(ex) for ex in playlist]
+        result_iter = er.rlbot_run_exercises(setup_manager, exercise, seed)
+
+        for _ in result_iter:
+            pass
