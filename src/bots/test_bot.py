@@ -45,18 +45,33 @@ class TestBot(BaseAgent):
         self.setup_action_sequence()
 
     def setup_action_sequence(self):
+        """
+        Setup for the action sequence with given actions in the scenario file.
+        If the actions don't fill the whole scenario time an idle action is appended so log more packets
+        """
         self.send_quick_chat(team_only=False, quick_chat=QuickChatSelection.Information_IGotIt)
         self.logger = Logger(self.scenario.name)
+
+        acc_durations = 0.0
 
         control_step_list = []
         for action in self.scenario.actions:
             control_step_list.append(
                 ControlStep(duration=action.duration, controls=self.get_action_controls(action.inputs)))
+            acc_durations += action.duration
+
+        if self.scenario.time > acc_durations:
+            control_step_list.append(ControlStep(duration=self.scenario.time - acc_durations,
+                                                 controls=SimpleControllerState()))
 
         self.active_sequence = Sequence(control_step_list)
 
     @staticmethod
     def get_physics(values) -> 'Physics':
+        """
+        Returns a physics object with location, rotation, velocity and angular_velocity parses from a corresponding
+        object that has all the needed attributes. (Supplied by the json config)
+        """
         position = Location(values.position.x, values.position.y, values.position.z, UnitSystem.UNITY)
         velocity = Velocity(values.velocity.x, values.velocity.y, values.velocity.z, UnitSystem.UNITY)
         angular_velocity = AngularVelocity(values.angularVelocity.x, values.angularVelocity.y, values.angularVelocity.z,
@@ -70,6 +85,10 @@ class TestBot(BaseAgent):
         )
 
     def setup_game_state(self):
+        """
+        Setup of the initial game state. This is made in the bot because setting the initial game state in the training
+        exercise lead to certain time offsets in logging.
+        """
         start_values = self.scenario.startValues
         gs = GameState()
         gs.cars = dict()
@@ -83,6 +102,11 @@ class TestBot(BaseAgent):
 
     @staticmethod
     def get_action_controls(inputs):
+        """
+        Returns a SimpleControllerState with the given inputs set to given values of the inputs object.
+        The object should have a name attribute corresponding to the input name in the ControllerState and a specified
+        value.
+        """
         control = SimpleControllerState()
         for i in inputs:
             setattr(control, i.name, i.value)
