@@ -7,7 +7,7 @@ from rlbot.utils.game_state_util import GameState, BallState, CarState, Physics
 from rlbot.utils.structures.game_data_struct import GameTickPacket
 
 from src.utils.sequence import Sequence, ControlStep
-from src.utils.scenario_test_object import ScenarioTestObject
+from src.utils.scenario_test_object import JSONObject
 from src.utils.logger import Logger
 from src.utils.vec import Location, Velocity, AngularVelocity, EulerAngles, UnitSystem
 import os
@@ -118,12 +118,12 @@ class TestBot(BaseAgent):
     def load_config(self, config_object_header):
         settings_path = config_object_header['settings'].value
         with open(settings_path) as settings_file:
-            settings = json.load(settings_file, object_hook=ScenarioTestObject)
+            settings = json.load(settings_file, object_hook=JSONObject)
             with open(settings.path_to_settings) as scenario_settings_file:
-                scenario_settings = json.load(scenario_settings_file, object_hook=ScenarioTestObject)
-                self.log_path = os.path.join(scenario_settings.results_path_rl_bot, scenario_settings.file_name)
+                scenario_settings = json.load(scenario_settings_file, object_hook=JSONObject)
                 with open(os.path.join(scenario_settings.szenario_path, scenario_settings.file_name)) as scenario_file:
-                    self.scenario = json.load(scenario_file, object_hook=ScenarioTestObject)
+                    self.scenario = json.load(scenario_file, object_hook=JSONObject)
+                    self.log_path = os.path.join(scenario_settings.results_path_rl_bot, self.scenario.name)
 
     @staticmethod
     def create_agent_configurations(config: ConfigObject):

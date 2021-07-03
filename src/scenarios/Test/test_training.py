@@ -8,7 +8,7 @@ from rlbottraining.training_exercise import Playlist
 from rlbottraining.training_exercise import TrainingExercise
 
 from src.graders.pass_graders import PassOnTimeout
-from src.utils.scenario_test_object import ScenarioTestObject
+from src.utils.scenario_test_object import JSONObject
 
 
 class TestGrader(CompoundGrader):
@@ -20,7 +20,7 @@ class TestGrader(CompoundGrader):
 
 @dataclass
 class TestExercise(TrainingExercise):
-    scenario: ScenarioTestObject = field(default_factory=ScenarioTestObject)
+    scenario: JSONObject = field(default_factory=JSONObject)
     grader: Grader = field(default_factory=TestGrader)
 
     def __post_init__(self):

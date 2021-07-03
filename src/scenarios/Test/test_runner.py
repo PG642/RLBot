@@ -7,7 +7,7 @@ from rlbot.matchconfig.conversions import read_match_config_from_file
 from rlbot.matchconfig.match_config import Team, PlayerConfig
 from rlbottraining.training_exercise import Playlist
 
-from src.utils.scenario_test_object import ScenarioTestObject
+from src.utils.scenario_test_object import JSONObject
 from test_training import TestExercise
 
 import os
@@ -32,11 +32,11 @@ match_config = make_match_config()
 def make_default_playlist() -> Playlist:
     # Load scenario file from settings to build the playlist
     with open('./settings.json') as settings_file:
-        settings = json.load(settings_file, object_hook=ScenarioTestObject)
+        settings = json.load(settings_file, object_hook=JSONObject)
         with open(settings.path_to_settings) as scenario_settings_file:
-            scenario_settings = json.load(scenario_settings_file, object_hook=ScenarioTestObject)
+            scenario_settings = json.load(scenario_settings_file, object_hook=JSONObject)
             with open(os.path.join(scenario_settings.szenario_path, scenario_settings.file_name)) as scenario_file:
-                scenario = json.load(scenario_file, object_hook=ScenarioTestObject)
+                scenario = json.load(scenario_file, object_hook=JSONObject)
 
     # Build up the actual playlist with the previously created match config
     exercises = [
