@@ -10,6 +10,7 @@ from src.utils.sequence import Sequence, ControlStep
 from src.utils.scenario_test_object import ScenarioTestObject
 from src.utils.logger import Logger
 from src.utils.vec import Location, Velocity, AngularVelocity, EulerAngles, UnitSystem
+import os
 
 
 class TestBot(BaseAgent):
@@ -114,12 +115,15 @@ class TestBot(BaseAgent):
         return control
 
     def load_config(self, config_object_header):
-        scenario = config_object_header['scenarios'].value
-        with open(scenario) as file:
-            self.scenario = json.load(file, object_hook=ScenarioTestObject)
+        settings_path = config_object_header['settings'].value
+        with open(settings_path) as settings_file:
+            settings = json.load(settings_file, object_hook=ScenarioTestObject)
+            with open(settings.path_to_settings) as scenario_settings_file:
+                scenario_settings = json.load(scenario_settings_file, object_hook=ScenarioTestObject)
+                with open(os.path.join(scenario_settings.szenario_path, scenario_settings.file_name)) as scenario_file:
+                    self.scenario = json.load(scenario_file, object_hook=ScenarioTestObject)
 
     @staticmethod
     def create_agent_configurations(config: ConfigObject):
         params = config.get_header(BOT_CONFIG_AGENT_HEADER)
-        params.add_value('scenarios', str, default=None,
-                         description='Scenario file.')
+        params.add_value('settings', str, default=None, description='Settings file that points to scenario settings')
