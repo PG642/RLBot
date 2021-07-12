@@ -346,6 +346,11 @@ class EulerAngles(Vec3):
             self.unit_system = UnitSystem.UNITY
 
     def to_unity_units(self) -> 'EulerAngles':
+        if self.unit_system == UnitSystem.UNITY:
+            return self
+        self.x = (self.x > 0) * 360 - self.x
+        self.y = (self.y > 0) * 360 - self.y
+        self.z = (self.z > 0) * 360 - self.z
         self.unit_system = UnitSystem.UNITY
         return self
 
