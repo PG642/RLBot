@@ -1,3 +1,4 @@
+import copy
 import math
 from typing import Union
 
@@ -262,6 +263,10 @@ class Location(Vec3):
         self.unit_system = UnitSystem.UNREAL
         return self
 
+    def to_game_state_vector(self):
+        if self.unit_system == UnitSystem.UNITY:
+            return copy.deepcopy(self).to_unreal_units().to_game_state_vector()
+        return Vec3.to_game_state_vector(self)
 
 class Velocity(Vec3):
     def to_unity_units(self) -> 'Velocity':
