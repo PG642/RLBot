@@ -28,7 +28,7 @@ class BallRollingToGoalie(TrainingExercise):
     def make_game_state(self, rng: SeededRandomNumberGenerator) -> GameState:
         ball_location = Location(rng.uniform(-10, 0), rng.uniform(0, 20), rng.uniform(-30, 30), UnitSystem.UNITY)\
             .to_unreal_units()
-        target = Location(-51, rng.uniform(0, 6), rng.uniform(-8, 8), UnitSystem.UNITY).to_unreal_units()
+        target = Location(-51, rng.uniform(3, 3), rng.uniform(-7, 7), UnitSystem.UNITY).to_unreal_units()
         ball_velocity = (target - ball_location).normalized() * rng.uniform(2000, 4000)
         return GameState(
             ball=BallState(physics=Physics(

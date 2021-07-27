@@ -125,6 +125,9 @@ class Vec3:
     def to_game_state_vector(self):
         return Vector3(self.x, self.y, self.z)
 
+    # def obs_normalized(self):
+    #     return self
+
 
 class Vec4:
     """
@@ -243,11 +246,11 @@ class Location(Vec3):
         if self.unit_system == UnitSystem.UNITY:
             return self
 
-        tmp = self.x
-        self.x = self.y
-        self.y = self.z
+        tmp = self.x / 100
+        self.x = self.y / 100
+        self.y = self.z / 100
         self.z = tmp
-        self /= 100
+        # self /= 100
         self.unit_system = UnitSystem.UNITY
         return self
 
@@ -255,11 +258,11 @@ class Location(Vec3):
         if self.unit_system == UnitSystem.UNREAL:
             return self
 
-        tmp = self.z
-        self.z = self.y
-        self.y = self.x
+        tmp = self.z * 100
+        self.z = self.y * 100
+        self.y = self.x * 100
         self.x = tmp
-        self *= 100
+        # self *= 100
         self.unit_system = UnitSystem.UNREAL
         return self
 
@@ -268,16 +271,20 @@ class Location(Vec3):
             return copy.deepcopy(self).to_unreal_units().to_game_state_vector()
         return Vec3.to_game_state_vector(self)
 
+    def obs_normalized(self):
+        return Location((self.x + 60) / 120, self.y / 20, (self.z + 41) / 82)
+
+
 class Velocity(Vec3):
     def to_unity_units(self) -> 'Velocity':
         if self.unit_system == UnitSystem.UNITY:
             return self
 
-        tmp = self.x
-        self.x = self.y
-        self.y = self.z
+        tmp = self.x / 100
+        self.x = self.y / 100
+        self.y = self.z / 100
         self.z = tmp
-        self /= 100
+        # self /= 100
         self.unit_system = UnitSystem.UNITY
         return self
 
@@ -285,13 +292,18 @@ class Velocity(Vec3):
         if self.unit_system == UnitSystem.UNREAL:
             return self
 
-        tmp = self.z
-        self.z = self.y
-        self.y = self.x
+        tmp = self.z * 100
+        self.z = self.y * 100
+        self.y = self.x * 100
         self.x = tmp
-        self *= 100
+        # self *= 100
         self.unit_system = UnitSystem.UNREAL
         return self
+
+    def obs_normalized(self, is_ball=False):
+        if is_ball:
+            return self / 60
+        return Vec3(self.x / 23, self.y / 23, self.z / 23)
 
 
 class AngularVelocity(Vec3):
@@ -316,6 +328,9 @@ class AngularVelocity(Vec3):
         self.x = tmp
         self.unit_system = UnitSystem.UNREAL
         return self
+
+    def obs_normalized(self):
+        return self / 5.5
 
 
 class EulerAngles(Vec3):
@@ -386,6 +401,9 @@ class EulerAngles(Vec3):
     def to_game_state_vector(self):
         return Rotator(self.x / 180 * math.pi, self.y / 180 * math.pi, self.z / 180 * math.pi)
 
+    def obs_normalized(self):
+        return self
+
 
 class Quaternion(Vec4):
     def __init__(self, x: Union[float, 'Quaternion', 'Rotator', 'GDRotator'] = 0, y: float = 0, z: float = 0,
@@ -441,4 +459,7 @@ class Quaternion(Vec4):
         self.y = self.x
         self.x = tmp
         self.unit_system = UnitSystem.UNREAL
+        return self
+
+    def obs_normalized(self):
         return self

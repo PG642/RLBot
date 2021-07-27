@@ -27,12 +27,31 @@ class MyBot(BaseAgent):
         car_physics = packet.game_cars[self.index].physics
         ball_physics = packet.game_ball.physics
 
-        car_location = Location(car_physics.location).to_unity_units()
-        car_velocity = Velocity(car_physics.velocity).to_unity_units()
-        car_rotation = Quaternion(car_physics.rotation).to_unity_units()
-        car_angular_velocity = AngularVelocity(car_physics.angular_velocity).to_unity_units()
-        ball_location = Location(ball_physics.location).to_unity_units()
-        ball_velocity = Velocity(ball_physics.velocity).to_unity_units()
+        car_location = Location(car_physics.location)
+        car_location.to_unity_units()
+        car_location = car_location.obs_normalized()
+
+        car_velocity = Velocity(car_physics.velocity)
+        car_velocity.to_unity_units()
+        car_velocity = car_velocity.obs_normalized()
+
+        car_rotation = Quaternion(car_physics.rotation)
+        car_rotation.to_unity_units()
+        car_rotation = car_rotation.obs_normalized()
+
+        car_angular_velocity = AngularVelocity(car_physics.angular_velocity)
+        car_angular_velocity.to_unity_units()
+        car_angular_velocity = car_angular_velocity.obs_normalized()
+
+        ball_location = Location(ball_physics.location)
+        ball_location.to_unity_units()
+        ball_location = ball_location.obs_normalized()
+
+        ball_velocity = Velocity(ball_physics.velocity)
+        ball_velocity.to_unity_units()
+        ball_velocity = ball_velocity.obs_normalized(is_ball=True)
+
+        boost = packet.game_cars[self.index].boost / 100
 
         # get input shape of model and set batch size to one
         input_shape = self.model.get_input_shape()
@@ -45,25 +64,28 @@ class MyBot(BaseAgent):
         data[0, 10:13] = list(car_angular_velocity)
         data[0, 13:16] = list(ball_location)
         data[0, 16:19] = list(ball_velocity)
+        data[0, 19] = boost
 
         output = self.model.run(data)
         output = output[0].tolist()[0]
 
         controls = SimpleControllerState()
         controls.throttle = output[0]
-        controls.steer = max(min(output[1], 1), -1)
+        controls.steer = output[1]
         controls.yaw = output[1]
         controls.pitch = output[2]
+        controls.roll = 0
         if output[3] > 0:
-            controls.roll = 1
-        elif output[3] < 0:
             controls.roll = -1
-        else:
-            controls.roll = 0
-        controls.boost = True if output[4] > 0 else False
-        controls.handbrake = True if output[5] > 0 else False
-        # controls.jump = True if output[7] > 0 else False
-        controls.use_item = False
+        elif output[3] < 0:
+            controls.roll = 1
+        if output[6] > 0:
+            controls.roll = output[1]
+            controls.yaw = 0
+        controls.boost = output[4] > 0
+        # controls.handbrake = True if output[5] > 0 else False
+        controls.jump = output[7] > 0
+        # controls.use_item = False
 
         return controls
 
