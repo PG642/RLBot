@@ -1,6 +1,6 @@
 import json
 
-from rlbot.agents.base_agent import BaseAgent, SimpleControllerState, BOT_CONFIG_AGENT_HEADER
+from rlbot.agents.base_agent import BaseAgent, SimpleControllerState, BOT_CONFIG_AGENT_HEADER, BOT_NAME_KEY
 from rlbot.messages.flat.QuickChatSelection import QuickChatSelection
 from rlbot.parsing.custom_config import ConfigObject
 from rlbot.utils.game_state_util import GameState, BallState, CarState, Physics
@@ -21,6 +21,7 @@ class TestBot(BaseAgent):
         self.scenario = None
         self.logger = None
         self.log_path = None
+        self.game_object = None
 
     def get_output(self, packet: GameTickPacket) -> SimpleControllerState:
         """
@@ -57,7 +58,7 @@ class TestBot(BaseAgent):
         acc_durations = 0.0
 
         control_step_list = []
-        for action in self.scenario.actions:
+        for action in self.game_object.actions:
             control_step_list.append(
                 ControlStep(duration=action.duration, controls=self.get_action_controls(action.inputs)))
             acc_durations += action.duration
@@ -91,14 +92,15 @@ class TestBot(BaseAgent):
         Setup of the initial game state. This is made in the bot because setting the initial game state in the training
         exercise lead to certain time offsets in logging.
         """
-        start_values = self.scenario.startValues
+        if self.game_object.id != '1':
+            return
         gs = GameState()
         gs.cars = dict()
-        for values in start_values:
-            if values.gameObject == 'car':
-                gs.cars[len(gs.cars)] = CarState(physics=self.get_physics(values))
-            elif values.gameObject == 'ball':
-                gs.ball = BallState(physics=self.get_physics(values))
+        for go in self.scenario.gameObjects:
+            if go.gameObject == 'car':
+                gs.cars[len(gs.cars)] = CarState(physics=self.get_physics(go.startValues))
+            elif go.gameObject == 'ball':
+                gs.ball = BallState(physics=self.get_physics(go.startValues))
 
         self.set_game_state(gs)
 
@@ -123,6 +125,8 @@ class TestBot(BaseAgent):
                 scenario_settings = json.load(scenario_settings_file, object_hook=JSONObject)
                 with open(os.path.join(scenario_settings.szenario_path, scenario_settings.file_name)) as scenario_file:
                     self.scenario = json.load(scenario_file, object_hook=JSONObject)
+                    car_id = self.name.split('_')[1]
+                    self.game_object = list(filter(lambda go: go.id == car_id, self.scenario.gameObjects))[0]
                     self.log_path = os.path.join(scenario_settings.results_path_rl_bot, self.scenario.name + '.json')
 
     @staticmethod
