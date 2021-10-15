@@ -127,7 +127,8 @@ class TestBot(BaseAgent):
                     self.scenario = json.load(scenario_file, object_hook=JSONObject)
                     car_id = self.name.split('_')[1]
                     self.game_object = list(filter(lambda go: go.id == car_id, self.scenario.gameObjects))[0]
-                    self.log_path = os.path.join(scenario_settings.results_path_rl_bot, self.scenario.name + '.json')
+                    self.log_path = os.path.join(scenario_settings.results_path_rl_bot, self.scenario.name
+                                                 + '_' + self.game_object.id + '.json')
 
     @staticmethod
     def create_agent_configurations(config: ConfigObject):
