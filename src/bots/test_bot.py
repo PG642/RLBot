@@ -34,12 +34,13 @@ class TestBot(BaseAgent):
             return SimpleControllerState()
 
         if self.active_sequence is not None and not self.active_sequence.done:
-            self.logger.log(packet)
+            if self.game_object.id == '1':
+                self.logger.log(packet)
             controls = self.active_sequence.tick(packet)
             if controls is not None:
                 return controls
 
-        if not self.logger.was_dumped:
+        if self.game_object.id == '1' and not self.logger.was_dumped:
             self.logger.dump()
         return SimpleControllerState()
 
@@ -53,7 +54,8 @@ class TestBot(BaseAgent):
         If the actions don't fill the whole scenario time an idle action is appended so log more packets
         """
         self.send_quick_chat(team_only=False, quick_chat=QuickChatSelection.Information_IGotIt)
-        self.logger = Logger(self.log_path)
+        if self.game_object.id == '1':
+            self.logger = Logger(self.log_path)
 
         acc_durations = 0.0
 
@@ -127,8 +129,7 @@ class TestBot(BaseAgent):
                     self.scenario = json.load(scenario_file, object_hook=JSONObject)
                     car_id = self.name.split('_')[1]
                     self.game_object = list(filter(lambda go: go.id == car_id, self.scenario.gameObjects))[0]
-                    self.log_path = os.path.join(scenario_settings.results_path_rl_bot, self.scenario.name
-                                                 + '_' + self.game_object.id + '.json')
+                    self.log_path = os.path.join(scenario_settings.results_path_rl_bot, self.scenario.name + '.json')
 
     @staticmethod
     def create_agent_configurations(config: ConfigObject):
