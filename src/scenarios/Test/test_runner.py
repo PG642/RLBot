@@ -17,7 +17,7 @@ cleanup = []
 
 
 def create_bot_config(car) -> PlayerConfig:
-    team = Team.BLUE if car.team == 0 else Team.ORANGE
+    team = Team.BLUE if car.team == "0" else Team.ORANGE
     cfg_file_name = './test_bot_' + car.id + '.cfg'
     with open('./test_bot.cfg') as bot_cfg_file:
         with open(cfg_file_name, 'w') as real_cfg_file:
@@ -25,6 +25,8 @@ def create_bot_config(car) -> PlayerConfig:
             for line in lines:
                 if line.find('name') > -1:
                     line = 'name = PGBot_' + car.id
+                if line.find('lead') > -1 and not car.lead:
+                    line = 'lead = False'
                 real_cfg_file.write(line)
     cleanup.append(cfg_file_name)
     return PlayerConfig.bot_config(Path(__file__).absolute().parent / cfg_file_name, team)
