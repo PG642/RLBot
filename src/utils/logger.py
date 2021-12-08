@@ -57,6 +57,7 @@ class Car(GameObject):
         self.has_wheel_contact = player_info.has_wheel_contact
         self.jumped = player_info.jumped
         self.boost = player_info.boost
+        self.id = player_info.name.replace('PGBot_', '')
 
 
 class ComplexEncoder(json.JSONEncoder):

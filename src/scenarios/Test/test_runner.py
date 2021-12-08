@@ -13,20 +13,35 @@ from test_training import TestExercise
 import os
 
 
-def make_match_config():
+cleanup = []
+
+
+def create_bot_config(car) -> PlayerConfig:
+    team = Team.BLUE if car.team == "0" else Team.ORANGE
+    cfg_file_name = './test_bot_' + car.id + '.cfg'
+    with open('./test_bot.cfg') as bot_cfg_file:
+        with open(cfg_file_name, 'w') as real_cfg_file:
+            lines = bot_cfg_file.readlines()
+            for line in lines:
+                if line.find('name') > -1:
+                    line = 'name = PGBot_' + car.id
+                if line.find('lead') > -1 and not car.lead:
+                    line = 'lead = False'
+                real_cfg_file.write(line)
+    cleanup.append(cfg_file_name)
+    return PlayerConfig.bot_config(Path(__file__).absolute().parent / cfg_file_name, team)
+
+
+def make_match_config(cars):
     """
     Creates a match config supplied with a player config that loads a bot that is configured by test_bot.cfg
     """
     result_match_config = read_match_config_from_file(Path('test_match.cfg'))
-    player_config = PlayerConfig.bot_config(
-        Path(__file__).absolute().parent / 'test_bot.cfg', Team.BLUE)
-    result_match_config.player_configs = [
-        player_config
-    ]
+    player_configs = []
+    for go in cars:
+        player_configs.append(create_bot_config(go))
+    result_match_config.player_configs = player_configs
     return result_match_config
-
-
-match_config = make_match_config()
 
 
 def make_default_playlist() -> Playlist:
@@ -40,8 +55,11 @@ def make_default_playlist() -> Playlist:
 
     # Build up the actual playlist with the previously created match config
     exercises = [
-        TestExercise(name='TestExercise1', scenario=scenario)
+        TestExercise(name=scenario.name, scenario=scenario)
     ]
+
+    match_config = make_match_config(filter(lambda go: go.gameObject == 'car', scenario.gameObjects))
+
     for e in exercises:
         e.match_config = match_config
     return exercises
@@ -58,3 +76,7 @@ if __name__ == "__main__":
 
         for _ in result_iter:
             pass
+    print('cleaning up bot configs')
+    for filename in cleanup:
+        os.remove(filename)
+    print('exercise finished')
