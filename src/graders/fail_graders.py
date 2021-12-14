@@ -1,12 +1,19 @@
 from rlbot.training.training import Fail, Grade
 from rlbottraining.grading.grader import Grader, TrainingTickPacket
-from typing import Optional
+from typing import Optional, Union
 from dataclasses import dataclass
 from rlbottraining.history.metric import Metric
+
 
 class WrongGoalFail(Fail):
     def __repr__(self):
         return f'{super().__repr__()}: Ball went into the wrong goal.'
+
+
+class BallPassingStrikerFail(Fail):
+    def __repr__(self):
+        return f'{super().__repr__()}: Ball passed the striker.'
+
 
 class FailOnTimeout(Grader):
     """Fails the exercise if we take too long."""
@@ -43,3 +50,24 @@ class FailOnTimeout(Grader):
             self.initial_seconds_elapsed,
             self.measured_duration_seconds,
         )
+
+
+class FailOnBallPassingStriker(Grader):
+    """
+    Fails the exercise if the ball passes the striker meaning he missed the shot
+    """
+
+    # Prevent false positives which might be caused by two bots touching the ball at basically the same time.
+    REQUIRED_CONSECUTIVE_TICKS = 60
+
+    def __init__(self):
+        self.consecutive_bad_ticks = 0
+
+    def on_tick(self, tick: TrainingTickPacket) -> Optional[Grade]:
+        if tick.game_tick_packet.game_ball.physics.location.y < tick.game_tick_packet.game_cars[0].physics.location.y:
+            self.consecutive_bad_ticks += 1
+        else:
+            self.consecutive_bad_ticks = 0
+
+        if self.consecutive_bad_ticks >= self.REQUIRED_CONSECUTIVE_TICKS:
+            return BallPassingStrikerFail()
