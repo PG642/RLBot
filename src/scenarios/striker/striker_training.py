@@ -31,7 +31,7 @@ class GoalStrikingExercise(TrainingExercise):
         ball_location = Location(rng.uniform(30, 50), rng.uniform(0.17, 10), rng.uniform(-20, 20), UnitSystem.UNITY)\
             .to_unreal_units()
         car_start_position = Location(0, 0.17, rng.uniform(-15, 15), UnitSystem.UNITY).to_unreal_units()
-        car_start_rotation = Rotator(0, pi / 2 + rng.uniform(-0.2, 0.2), 0)
+        car_start_rotation = Rotator(0, pi / 2 + rng.uniform(-pi/9, pi/9), 0)
         target = Location(rng.uniform(10, 30), rng.uniform(0, 7), car_start_position.z, UnitSystem.UNITY)\
             .to_unreal_units()
         ball_velocity = (target - ball_location).normalized() * rng.uniform(500, 1000)
