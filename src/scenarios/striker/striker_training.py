@@ -30,14 +30,15 @@ class GoalStrikingExercise(TrainingExercise):
     def make_game_state(self, rng: SeededRandomNumberGenerator) -> GameState:
         ball_location = Location(rng.uniform(30, 50), rng.uniform(0.17, 10), rng.uniform(-20, 20), UnitSystem.UNITY)\
             .to_unreal_units()
-        target = Location(-51, rng.uniform(3, 3), rng.uniform(-7, 7), UnitSystem.UNITY).to_unreal_units()
-        ball_velocity = (target - ball_location).normalized() * rng.uniform(2000, 4000)
         car_start_position = Location(0, 0.17, rng.uniform(-15, 15), UnitSystem.UNITY).to_unreal_units()
         car_start_rotation = Rotator(0, pi / 2 + rng.uniform(-0.2, 0.2), 0)
+        target = Location(rng.uniform(10, 30), rng.uniform(0, 7), car_start_position.z, UnitSystem.UNITY)\
+            .to_unreal_units()
+        ball_velocity = (target - ball_location).normalized() * rng.uniform(500, 1000)
         return GameState(
             ball=BallState(physics=Physics(
                 location=ball_location.to_game_state_vector(),
-                velocity=Vector3(0, 0, -0.01),#ball_velocity.to_game_state_vector(),
+                velocity=ball_velocity.to_game_state_vector(),
                 angular_velocity=Vector3(0, 0, 0)
             )),
             cars={

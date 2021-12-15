@@ -58,13 +58,13 @@ class FailOnBallPassingStriker(Grader):
     """
 
     # Prevent false positives which might be caused by two bots touching the ball at basically the same time.
-    REQUIRED_CONSECUTIVE_TICKS = 60
+    REQUIRED_CONSECUTIVE_TICKS = 20
 
     def __init__(self):
         self.consecutive_bad_ticks = 0
 
     def on_tick(self, tick: TrainingTickPacket) -> Optional[Grade]:
-        if tick.game_tick_packet.game_ball.physics.location.y < tick.game_tick_packet.game_cars[0].physics.location.y:
+        if tick.game_tick_packet.game_ball.physics.location.y + 500 < tick.game_tick_packet.game_cars[0].physics.location.y:
             self.consecutive_bad_ticks += 1
         else:
             self.consecutive_bad_ticks = 0
