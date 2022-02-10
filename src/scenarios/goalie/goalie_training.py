@@ -1,3 +1,8 @@
+import os
+import sys
+cwd = os.getcwd()
+sys.path.append(cwd + '/../../..')
+
 from math import pi
 from dataclasses import dataclass, field
 
