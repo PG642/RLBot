@@ -14,7 +14,6 @@ from src.models.onnx_model import ONNXModel
 
 import torch
 from src.neroRL.nn.actor_critic import create_actor_critic_model
-from gym import spaces
 
 from math import sin, cos
 
@@ -34,10 +33,12 @@ class MyBot(BaseAgent):
         car_physics = packet.game_cars[self.index].physics
         ball_physics = packet.game_ball.physics
 
-        relativeLocation = Location(ball_physics.location) - Location(car_physics.location)
-        relativeLocation = Location(relativeLocation)
-        relativeLocation.to_unity_units()
-        relativeLocation = relativeLocation.obs_normalized()
+        ball_location = Location(ball_physics.location).to_unity_units()
+        car_location = Location(car_physics.location).to_unity_units()
+        relativeX = ((ball_location.x + 60.0) - (car_location.x + 60.0)) / 120.0
+        relativeY = (ball_location.y - car_location.y) / 20.0
+        relativeZ = ((ball_location.z + 41.0) - (car_location.z + 41.0)) / 82.0
+        relativeLocation = Location(relativeX, relativeY, relativeZ)
 
         car_location = Location(car_physics.location)
         car_location.to_unity_units()
@@ -77,9 +78,7 @@ class MyBot(BaseAgent):
         vec_obs[0, 20:] = list(relativeLocation)
         policy, value, _, _ = self.model(None, torch.tensor(vec_obs, dtype=torch.float32, device=self.device), None)
 
-        print(list(relativeLocation))
-
-        # Samplem actions
+        # Sample actions
         actions = []
         # Sample action
         for action_dimension in policy:
