@@ -13,6 +13,8 @@ from src.models.onnx_model import ONNXModel
 
 from math import sin, cos
 
+DISCRETE_ACTIONS = [-1, -0.5, 0, 0.5, 1]
+
 class MyBot(BaseAgent):
 
     def __init__(self, name, team, index):
@@ -70,21 +72,43 @@ class MyBot(BaseAgent):
         output = output[0].tolist()[0]
 
         controls = SimpleControllerState()
-        controls.throttle = output[0]
-        controls.steer = output[1]
-        controls.yaw = output[1]
-        controls.pitch = output[2]
-        controls.roll = 0
-        if output[3] > 0:
-            controls.roll = -1
-        elif output[3] < 0:
-            controls.roll = 1
-        if output[6] > 0:
-            controls.roll = output[1]
-            controls.yaw = 0
-        controls.boost = output[4] > 0
-        # controls.handbrake = True if output[5] > 0 else False
-        controls.jump = output[7] > 0
+        if self.model.is_multi_discrete:
+            controls.throttle = DISCRETE_ACTIONS[output[0]]
+            controls.steer = DISCRETE_ACTIONS[output[1]]
+            controls.yaw = DISCRETE_ACTIONS[output[1]]
+            controls.pitch = DISCRETE_ACTIONS[output[2]]
+            if output[3] == 0:
+                controls.roll = -1
+            elif output[3] == 2:
+                controls.roll = 1
+            else:
+                controls.roll = 0
+            controls.boost = output[4] > 0
+            controls.handbrake = output[5] > 0
+            if output[6] > 1:
+                controls.roll = output[1]
+                controls.yaw = 0
+            controls.jump = output[7] > 0
+        elif self.model.is_continuous:
+            controls.throttle = output[0]
+            controls.steer = output[1]
+            controls.yaw = output[1]
+            controls.pitch = output[2]
+            controls.roll = 0
+            if output[3] > 0:
+                controls.roll = -1
+            elif output[3] < 0:
+                controls.roll = 1
+            if output[6] > 0:
+                controls.roll = output[1]
+                controls.yaw = 0
+            controls.boost = output[4] > 0
+            controls.handbrake = output[5] > 0
+            if output[6] > 1:
+                controls.roll = output[1]
+                controls.yaw = 0
+            controls.jump = output[7] > 0
+
         # controls.use_item = False
 
         return controls
