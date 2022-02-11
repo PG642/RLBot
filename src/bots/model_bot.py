@@ -98,8 +98,8 @@ class MyBot(BaseAgent):
             controls.roll = 0
         controls.boost = actions[4] > 0
         controls.handbrake = actions[5] > 0
-        if actions[6] > 1:
-            controls.roll = actions[1]
+        if actions[6] > 0:
+            controls.roll = DISCRETE_ACTIONS[actions[1]]
             controls.yaw = 0
         controls.jump = actions[7] > 0
         # controls.use_item = False
