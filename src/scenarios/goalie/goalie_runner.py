@@ -22,9 +22,13 @@ match_config = make_match_config()
 
 
 def make_default_playlist() -> Playlist:
-    exercises = [
-        BallRollingToGoalie('BallRollingToGoalie')
-    ]
+    shot_ids = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009]
+
+    exercises = []
+    for id in shot_ids:
+        for repetition in range(3):
+            exercises.append(BallRollingToGoalie("save shot: " + str(id) + " rep: " + str(repetition) , shot=id))
+
     for exercise in exercises:
         exercise.match_config = match_config
     return exercises
