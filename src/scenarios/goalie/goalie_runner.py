@@ -35,4 +35,21 @@ def make_default_playlist() -> Playlist:
 
 
 if __name__ == "__main__":
-    er.run_module(Path(__file__).absolute(), reload_policy=er.ReloadPolicy.EACH_EXERCISE)
+    playlist_factory = make_default_playlist()
+    playlist: Playlist = None
+
+    with er.use_or_create(None, er.setup_manager_context) as setup_manager:
+        er.apply_render_policy(er.RenderPolicy.DEFAULT, setup_manager)
+        playlist = make_default_playlist()
+        wrapped_exercises = [er.TrainingExerciseAdapter(ex) for ex in playlist]
+        seed = er.infinite_seed_generator()
+        for i, rlbot_result in enumerate(
+                er.rlbot_run_exercises(setup_manager, wrapped_exercises, seed=seed, reload_agent=True)):
+            print(er.ExerciseResult(
+                grade=rlbot_result.grade,
+                exercise=rlbot_result.exercise.exercise,  # unwrap the TrainingExerciseAdapter.
+                reproduction_info=er.ReproductionInfo(
+                    seed=seed,
+                    playlist_index=i,
+                )
+            ))
