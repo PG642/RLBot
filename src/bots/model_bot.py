@@ -29,6 +29,15 @@ class MyBot(BaseAgent):
         This function will be called by the framework many times per second. This is where you can
         see the motion of the ball, etc. and return controls to drive your car.
         """
+        # Change model parameters if a new checkpoint is provided
+        import src.scenarios.goalie.goalie_runner as checkpoint
+        if self.absolute_model_path != checkpoint.current_checkpoint:
+            print("CHECKPOINT HAS CHANGED")
+            if checkpoint.current_checkpoint == "":
+                print("NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE ")
+            self.absolute_model_path = checkpoint.current_checkpoint
+            self.create_and_load_model(checkpoint.current_checkpoint)
+
         # Prepare vector observations and apply normalization
         car_physics = packet.game_cars[self.index].physics
         ball_physics = packet.game_ball.physics
@@ -108,9 +117,9 @@ class MyBot(BaseAgent):
     def load_config(self, config_object_header):
         model_path = config_object_header['model_path'].value
         if model_path is not None:
-            absolute_model_path = Path(__file__).absolute().parent / model_path
+            self.absolute_model_path = Path(__file__).absolute().parent / model_path
             # self.model = ONNXModel(absolute_model_path.__str__())
-            self.create_and_load_model(absolute_model_path.__str__())
+            self.create_and_load_model(self.absolute_model_path.__str__())
 
     @staticmethod
     def create_agent_configurations(config: ConfigObject):
