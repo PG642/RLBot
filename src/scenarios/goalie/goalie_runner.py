@@ -52,22 +52,13 @@ def get_sorted_checkpoints(dirpath):
         a[i] = os.path.abspath(os.path.join(dirpath, f))
     return a
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("path", help="Path to the directory that contains checkpoints", default="./checkpoints/baseline_2/20220212-201235_50/")
-    args = parser.parse_args()
-    path = args.path
-    repetitions = 3
-    training_shots = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-    checkpoints = get_sorted_checkpoints(path)
-    num_experiments = len(checkpoints) * len(training_shots) * repetitions
-
+def eval_shots(checkpoints, repetitions, shots):
     with er.use_or_create(None, er.setup_manager_context) as setup_manager:
         er.apply_render_policy(er.RenderPolicy.DEFAULT, setup_manager)
-        training_results = np.zeros((len(checkpoints), repetitions, len(training_shots))) # checkpoints, repetitions, seeds
+        num_experiments = len(checkpoints) * len(shots) * repetitions
         flat_results = np.zeros(num_experiments)
         # Loop execercises
-        playlist = make_default_playlist(checkpoints, repetitions, training_shots)
+        playlist = make_default_playlist(checkpoints, repetitions, shots)
         wrapped_exercises = [er.TrainingExerciseAdapter(ex) for ex in playlist]
         for id, rlbot_result in enumerate(er.rlbot_run_exercises(setup_manager, wrapped_exercises, seed=0, reload_agent=False)):
             result = er.ExerciseResult(
@@ -81,9 +72,40 @@ if __name__ == "__main__":
             # Store grade
             if isinstance(result.grade, Pass):
                 print("SAVE")
-                flat_results = 1
+                flat_results[id] = 1
             else:
                 print("GOAL")
+    return flat_results
 
-    training_results = flat_results.reshape(len(checkpoints), repetitions, len(training_shots))
-    pickle.dump( training_results, open( "training_results.p", "wb" ) )
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("path", help="Path to the directory that contains checkpoints", default="./checkpoints/baseline_2/20220212-201235_50/")
+    parser.add_argument("out", help="Name of the output file", default="results.res")
+    args = parser.parse_args()
+    path = args.path
+    out = args.out
+    repetitions = 3
+    checkpoints = get_sorted_checkpoints(path)
+
+    # Eval training
+    training_shots = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    training_results = eval_shots(checkpoints, repetitions, training_shots)
+    training_results = training_results.reshape(len(checkpoints), repetitions, len(training_shots))
+    
+    # Eval unknown
+    unknown_shots = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009]
+    unknown_results = eval_shots(checkpoints, repetitions, unknown_shots)
+    unknown_results = training_results.reshape(len(checkpoints), repetitions, len(unknown_shots))
+
+    # Eval out of dist
+    # out_of_dist_shots = [3000, 3001, 3002, 3003, 3004, 3005, 3006, 3007, 3008, 3009]
+    # out_of_dist_results = eval_shots(checkpoints, repetitions, out_of_dist_shots)
+    # out_of_dist_results = training_results.reshape(len(checkpoints), repetitions, len(out_of_dist_shots))
+
+    # Output result file
+    data_dict = {
+        "train": training_results,
+        "eval": unknown_results,
+        # "out_of_dist": out_of_dist_results
+    }
+    pickle.dump(data_dict, open(out, "wb"))
