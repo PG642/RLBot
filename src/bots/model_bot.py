@@ -2,15 +2,16 @@ from os import stat
 from pathlib import Path
 
 import numpy as np
+from queue import Empty
 from rlbot.agents.base_agent import BaseAgent, SimpleControllerState, BOT_CONFIG_AGENT_HEADER
 from rlbot.messages.flat.QuickChatSelection import QuickChatSelection
 from rlbot.parsing.custom_config import ConfigObject
 from rlbot.utils.structures.game_data_struct import GameTickPacket
+from rlbot.matchcomms.common_uses.set_attributes_message import handle_set_attributes_message
+from rlbot.matchcomms.common_uses.reply import reply_to
 
 from src.utils.drive import steer_toward_target
 from src.utils.vec import Vec3, Location, Velocity, Quaternion, AngularVelocity
-
-from src.models.onnx_model import ONNXModel
 
 import torch
 from src.neroRL.nn.actor_critic import create_actor_critic_model
@@ -23,20 +24,34 @@ class MyBot(BaseAgent):
 
     def __init__(self, name, team, index):
         super().__init__(name, team, index)
+        self.absolute_model_path = ""
 
     def get_output(self, packet: GameTickPacket) -> SimpleControllerState:
         """
         This function will be called by the framework many times per second. This is where you can
         see the motion of the ball, etc. and return controls to drive your car.
         """
-        # Change model parameters if a new checkpoint is provided
-        import src.scenarios.goalie.goalie_runner as checkpoint
-        if self.absolute_model_path != checkpoint.current_checkpoint:
-            print("CHECKPOINT HAS CHANGED")
-            if checkpoint.current_checkpoint == "":
-                print("NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE ")
-            self.absolute_model_path = checkpoint.current_checkpoint
-            self.create_and_load_model(checkpoint.current_checkpoint)
+        # Read messages from the exercise to change the model parameters on demand
+        for i in range(100):  # process at most 100 messages per tick.
+            try:
+                msg = self.matchcomms.incoming_broadcast.get_nowait()
+            except Empty:
+                break
+
+            if handle_set_attributes_message(msg, self, allowed_keys=['path']):
+                reply_to(self.matchcomms, msg)  # Let the sender know we've set the attribute.
+                print("--------------------------------------------")
+                print("message received")
+                print(msg["setattrs"]["path"])
+                abs_path = Path(__file__).absolute().parent.parent / msg["setattrs"]["path"]
+                if self.absolute_model_path != abs_path:
+                    print("Load new checkpoint: " + str(abs_path))
+                    self.absolute_model_path = abs_path
+                    self.create_and_load_model(abs_path)
+            else:
+                # Ignore messages that are not for us.
+                self.logger.debug(f'Unhandled message: {msg}')
+            print("--------------------------------------------")
 
         # Prepare vector observations and apply normalization
         car_physics = packet.game_cars[self.index].physics
@@ -117,9 +132,8 @@ class MyBot(BaseAgent):
     def load_config(self, config_object_header):
         model_path = config_object_header['model_path'].value
         if model_path is not None:
-            self.absolute_model_path = Path(__file__).absolute().parent / model_path
-            # self.model = ONNXModel(absolute_model_path.__str__())
-            self.create_and_load_model(self.absolute_model_path.__str__())
+            absolute_model_path = Path(__file__).absolute().parent / model_path
+            self.create_and_load_model(absolute_model_path.__str__())
 
     @staticmethod
     def create_agent_configurations(config: ConfigObject):
@@ -135,6 +149,7 @@ class MyBot(BaseAgent):
         else:
             torch.set_default_tensor_type("torch.FloatTensor")
         # Load checkpoint
+        print(path)
         checkpoint = torch.load(path)
         # Setup spaces
         self.vis_obs_space = None
@@ -149,3 +164,6 @@ class MyBot(BaseAgent):
         self.model.load_state_dict(checkpoint["model"])
         # Run inference
         self.model.eval()
+
+    def is_hot_reload_enabled(self):
+        return False

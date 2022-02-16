@@ -12,6 +12,8 @@ from rlbottraining.rng import SeededRandomNumberGenerator
 from rlbottraining.training_exercise import Playlist
 from rlbot.utils.game_state_util import GameState, BallState, CarState, Physics, Vector3, Rotator
 from rlbottraining.common_graders.compound_grader import CompoundGrader
+from rlbot.matchcomms.common_uses.set_attributes_message import make_set_attributes_message
+from rlbot.matchcomms.common_uses.reply import send_and_wait_for_replies
 
 from src.graders.pass_graders import PassOnBallGoingAwayFromGoal, PassOnGoalForAllyTeam, PassOnTimeout
 from src.utils.vec import Vec3, Location, UnitSystem, Velocity
@@ -51,6 +53,11 @@ class GoalieGrader(CompoundGrader):
 class BallRollingToGoalie(TrainingExercise):
     grader: Grader = field(default_factory=GoalieGrader)
     shot:int = 0
+    repetition:int = 0
+    path:str = "blank"
+
+    def on_briefing(self):
+        send_and_wait_for_replies(self.get_matchcomms(), [make_set_attributes_message(0, {'path': self.path}),])
 
     def make_game_state(self, rng: SeededRandomNumberGenerator) -> GameState:
         ball_location = Location(shots[str(self.shot)]["ball_pos"][0], shots[str(self.shot)]["ball_pos"][1], shots[str(self.shot)]["ball_pos"][2], UnitSystem.UNITY)
@@ -75,9 +82,3 @@ class BallRollingToGoalie(TrainingExercise):
                 )
             },
         )
-
-
-# def make_default_playlist() -> Playlist:
-#     return [
-#         BallRollingToGoalie(name='BallRollingToGoalie'),
-#     ]
