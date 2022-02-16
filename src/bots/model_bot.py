@@ -25,6 +25,9 @@ class MyBot(BaseAgent):
     def __init__(self, name, team, index):
         super().__init__(name, team, index)
         self.absolute_model_path = ""
+        self.vis_obs_space = None
+        self.vec_obs_space = (23, )
+        self.action_space_shape = (5, 5, 5, 3, 2, 2, 2, 2)
 
     def get_output(self, packet: GameTickPacket) -> SimpleControllerState:
         """
@@ -148,13 +151,9 @@ class MyBot(BaseAgent):
             torch.set_default_tensor_type("torch.cuda.FloatTensor")
         else:
             torch.set_default_tensor_type("torch.FloatTensor")
+        
         # Load checkpoint
-        print(path)
         checkpoint = torch.load(path)
-        # Setup spaces
-        self.vis_obs_space = None
-        self.vec_obs_space = (23, )
-        self.action_space_shape = (5, 5, 5, 3, 2, 2, 2, 2)
         # Create model
         self.model = create_actor_critic_model(checkpoint["config"]["model"], True, self.vis_obs_space,
                             self.vec_obs_space, self.action_space_shape,
