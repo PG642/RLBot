@@ -52,7 +52,7 @@ shots = {
 }
 
 class GoalieGrader(CompoundGrader):
-    def __init__(self, timeout_seconds=10.0, ally_team=1):
+    def __init__(self, timeout_seconds=5.0, ally_team=1):
         super().__init__([
             PassOnGoalForAllyTeam(ally_team),
             PassOnTimeout(timeout_seconds),
