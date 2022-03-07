@@ -33,7 +33,7 @@ def make_default_playlist(checkpoints, repetitions, shot_ids) -> Playlist:
                 ex = BallRollingToGoalie("save shot: " + str(id), path=checkpoint, repetition=repetition, shot=id)
                 # ex.match_config = make_match_config()
                 ex.match_config = match_config
-                exercises.append(ex)
+                exercises.append(ex)         
     return exercises
 
 def get_sorted_checkpoints(dirpath):

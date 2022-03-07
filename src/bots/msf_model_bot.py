@@ -34,7 +34,7 @@ class MSFBot(BaseAgent):
         super().__init__(name, team, index)
         self.absolute_model_path = ""
         self.vis_obs_space = None
-        self.vec_obs_space = (23,)
+        self.vec_obs_space = (20,)
         self.action_space_shape = [5, 5, 5, 3, 2, 2, 2, 2]
         self.rnn_states = None
 
@@ -111,7 +111,7 @@ class MSFBot(BaseAgent):
         vec_obs[0, 13:16] = list(ball_location)
         vec_obs[0, 16:19] = list(ball_velocity)
         vec_obs[0, 19] = boost
-        vec_obs[0, 20:] = list(relativeLocation)
+        #vec_obs[0, 20:] = list(relativeLocation)
 
         obs_torch = AttrDict(transform_dict_observations(vec_obs))
         for key, x in obs_torch.items():
@@ -167,13 +167,13 @@ class MSFBot(BaseAgent):
         #D:\PG\Run_Ergebnisse\reward_func_test_frederik_higher_pen_0\checkpoint_p0\model.pth
         experiment = path.parents[1].name
         train_dir = str(path.parents[2])
-        self.cfg = parse_args(argv=["--algo=APPO", "--experiment={0}".format(experiment), "--train_dir={0}".format(train_dir)], evaluation=True)
+        self.cfg = parse_args(argv=["--algo=APPO", "--experiment={0}".format(experiment), "--train_dir={0}".format(train_dir), "--env=unity_saving_training_discrete"], evaluation=True)
         self.cfg = load_from_checkpoint(self.cfg)
         self.cfg.env_frameskip = 1  # for evaluation
         self.cfg.num_envs = 1
         self.device = torch.device('cpu' if self.cfg.device == 'cpu' else 'cuda')
         action_space = transform_action_space(MultiDiscrete(self.action_space_shape))
-        observation_space = Box(self.vec_obs_space)
+        observation_space = Box(shape=self.vec_obs_space, low=-1, high=1)
         self.model = create_model(self.cfg, self.device, action_space, observation_space)
 
         # Run inference
