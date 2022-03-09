@@ -127,7 +127,7 @@ class MSFBot(BaseAgent):
         # Sample actions
         # sample actions from the distribution by default
         actions = policy_outputs[2].actions
-        actions = actions.cpu().numpy()
+        actions = actions.cpu().numpy()[0]
         self.rnn_states = policy_outputs[2].rnn_states
 
         # Put actions to live
